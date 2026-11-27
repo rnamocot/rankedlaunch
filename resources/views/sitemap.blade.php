@@ -21,4 +21,7 @@
     @foreach ($alternatives as $product)
     <url><loc>{{ route('alternatives', $product) }}</loc><changefreq>weekly</changefreq></url>
     @endforeach
+    @foreach ($makers as $maker)
+    <url><loc>{{ route('profile', $maker->username) }}</loc><changefreq>weekly</changefreq></url>
+    @endforeach
 </urlset>

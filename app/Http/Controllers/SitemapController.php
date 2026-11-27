@@ -16,8 +16,10 @@ class SitemapController extends Controller
         $liveByCategory = Product::live()->selectRaw('category_id, COUNT(*) as n')->groupBy('category_id')->pluck('n', 'category_id');
         $alternatives = $products->filter(fn ($p) => ($liveByCategory[$p->category_id] ?? 0) >= 3);
 
+        $makers = \App\Models\User::whereNull('banned_at')->whereHas('products', fn ($q) => $q->live())->get(['username', 'updated_at']);
+
         return response()
-            ->view('sitemap', compact('products', 'categories', 'alternatives'))
+            ->view('sitemap', compact('products', 'categories', 'alternatives', 'makers'))
             ->header('Content-Type', 'application/xml');
     }
 }

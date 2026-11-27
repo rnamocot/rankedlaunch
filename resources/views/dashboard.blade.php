@@ -5,7 +5,8 @@
             ['Overview', '#overview', 'chart'],
             ['Launches', '#launches', 'grid'],
             ['Your upvotes', '#upvotes', 'chevron-up'],
-            ['Account', route('account'), 'user'],
+            ['Public profile', route('profile', auth()->user()->username), 'user'],
+            ['Account', route('account'), 'code'],
         ];
         $sections = [
             'live' => 'Live today',

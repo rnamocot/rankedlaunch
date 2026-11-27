@@ -80,6 +80,10 @@
                 </div>
             </section>
 
+            @if ($product->isLive())
+                <x-comments :product="$product" :comments="$comments" />
+            @endif
+
             @if ($related->isNotEmpty())
                 <section class="mt-12">
                     <h2 class="group-header !px-0">
@@ -120,14 +124,18 @@
             @if ($product->user)
                 <section>
                     <h2 class="group-header">Maker</h2>
-                    <div class="card flex items-center gap-3 px-4 py-3">
+                    <a href="{{ $product->user->profileUrl() }}" class="card card-hover flex items-center gap-3 px-4 py-3">
                         @if ($product->user->avatar)
                             <img src="{{ $product->user->avatar }}" alt="" class="size-9 rounded-full">
                         @else
                             <span class="grid size-9 place-items-center rounded-full bg-fill text-sm font-semibold">{{ $product->user->initials() }}</span>
                         @endif
-                        <span class="text-sm font-medium">{{ $product->user->name }}</span>
-                    </div>
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-sm font-semibold">{{ $product->user->name }}</span>
+                            <span class="block truncate text-xs text-ink-2">{{ '@'.$product->user->username }}</span>
+                        </span>
+                        <x-icon name="chevron-right" :size="16" class="text-ink-3" />
+                    </a>
                 </section>
             @endif
 

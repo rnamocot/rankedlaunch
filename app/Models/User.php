@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'avatar', 'provider', 'provider_id', 'timezone'])]
+#[Fillable(['name', 'email', 'password', 'avatar', 'provider', 'provider_id', 'timezone', 'username', 'bio', 'website', 'x_handle'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -25,6 +25,46 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'banned_at' => 'datetime',
         ];
+    }
+
+    /** Usernames that would clash with site pages or impersonate staff. */
+    public const RESERVED_USERNAMES = [
+        'admin', 'administrator', 'api', 'about', 'account', 'apps', 'auth', 'badge', 'blog', 'chat', 'dashboard',
+        'discover', 'help', 'launch', 'login', 'logout', 'mod', 'moderator', 'pricing', 'rankedlaunch', 'rankings',
+        'register', 'root', 'settings', 'staff', 'submit', 'support', 'system', 'terms', 'privacy', 'team',
+    ];
+
+    protected static function booted(): void
+    {
+        // Every account gets a profile handle (/@username) on creation.
+        static::creating(function (User $user) {
+            $user->username ??= static::uniqueUsername($user->name ?: 'maker');
+        });
+    }
+
+    public static function uniqueUsername(string $name): string
+    {
+        $base = \Illuminate\Support\Str::of($name)->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '')->limit(20, '')->toString();
+        if (strlen($base) < 3 || in_array($base, self::RESERVED_USERNAMES, true)) {
+            $base = 'maker'.$base;
+        }
+        $candidate = $base;
+        $i = 2;
+        while (static::where('username', $candidate)->exists()) {
+            $candidate = $base.$i++;
+        }
+
+        return $candidate;
+    }
+
+    public function profileUrl(): string
+    {
+        return route('profile', $this->username);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
     }
 
     public function products(): HasMany

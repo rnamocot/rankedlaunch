@@ -34,6 +34,31 @@
                     @endif
                     @error('email')<p class="field-error">{{ $message }}</p>@enderror
                 </div>
+                <div>
+                    <label for="username" class="field-label">Username</label>
+                    <div class="flex items-center rounded-xl bg-fill pl-3.5 text-sm text-ink-2">
+                        <span class="shrink-0">rankedlaunch.com/@</span>
+                        <input id="username" name="username" value="{{ old('username', $user->username) }}" required class="input !bg-transparent !pl-0.5" autocomplete="off">
+                    </div>
+                    @error('username')<p class="field-error">{{ $message }}</p>@else<p class="field-hint">Your public maker profile: <a href="{{ $user->profileUrl() }}" class="font-medium text-ink underline underline-offset-2">view it</a>.</p>@enderror
+                </div>
+                <div>
+                    <label for="bio" class="field-label">Short bio <span class="font-normal text-ink-3">optional</span></label>
+                    <input id="bio" name="bio" maxlength="160" value="{{ old('bio', $user->bio) }}" class="input" placeholder="What you build, in one line">
+                    @error('bio')<p class="field-error">{{ $message }}</p>@enderror
+                </div>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                        <label for="website" class="field-label">Website <span class="font-normal text-ink-3">optional</span></label>
+                        <input id="website" name="website" type="url" value="{{ old('website', $user->website) }}" class="input" placeholder="https://">
+                        @error('website')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <label for="x_handle" class="field-label">X handle <span class="font-normal text-ink-3">optional</span></label>
+                        <input id="x_handle" name="x_handle" value="{{ old('x_handle', $user->x_handle ? '@'.$user->x_handle : '') }}" class="input" placeholder="@yourname">
+                        @error('x_handle')<p class="field-error">{{ $message }}</p>@enderror
+                    </div>
+                </div>
                 <div class="flex justify-end"><button class="btn btn-primary">Save profile</button></div>
             </form>
         </section>

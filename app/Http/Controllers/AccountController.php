@@ -22,7 +22,12 @@ class AccountController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:80'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-        ]);
+            'username' => ['sometimes', 'required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_]+$/', Rule::notIn(User::RESERVED_USERNAMES), Rule::unique('users')->ignore($user->id)],
+            'bio' => ['nullable', 'string', 'max:160'],
+            'website' => ['nullable', 'url:http,https', 'max:255'],
+            'x_handle' => ['nullable', 'string', 'max:30', 'regex:/^@?[A-Za-z0-9_]{1,15}$/'],
+        ], ['username.regex' => 'Use lowercase letters, numbers and underscores only.']);
+        $data['x_handle'] = isset($data['x_handle']) ? ltrim($data['x_handle'], '@') : null;
 
         // Placeholder emails from X sign-in can always be replaced with a real one.
         if ($data['email'] !== $user->email) {

@@ -27,6 +27,7 @@ Route::get('/category/{category}', [CategoryController::class, 'show'])->name('c
 Route::get('/apps/{product}', [ProductController::class, 'show'])->name('product');
 Route::get('/apps/{product}/alternatives', [\App\Http\Controllers\DiscoverController::class, 'alternatives'])->name('alternatives');
 Route::get('/discover', [\App\Http\Controllers\DiscoverController::class, 'index'])->name('discover');
+Route::get('/@{username}', [\App\Http\Controllers\ProfileController::class, 'show'])->where('username', '[A-Za-z0-9_]{3,30}')->name('profile');
 Route::get('/pricing', fn (\App\Services\Pricing $pricing) => view('pricing', ['plans' => config('rankedlaunch.plans'), 'pricing' => $pricing]))->name('pricing');
 Route::get('/launch', [\App\Http\Controllers\MakersController::class, 'index'])->name('launch');
 Route::view('/how-it-works', 'how-it-works')->name('how-it-works');
@@ -83,6 +84,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/account/timezone', [\App\Http\Controllers\AccountController::class, 'timezone'])->middleware('throttle:10,1')->name('account.timezone');
 
     Route::post('/apps/{product}/vote', [VoteController::class, 'toggle'])->middleware('throttle:60,1')->name('vote');
+    Route::post('/apps/{product}/comments', [\App\Http\Controllers\CommentController::class, 'store'])->middleware('throttle:10,1')->name('comments.store');
+    Route::delete('/comments/{comment}', [\App\Http\Controllers\CommentController::class, 'destroy'])->name('comments.destroy');
 
     Route::get('/submit', [SubmitController::class, 'create'])->name('submit');
     Route::post('/submit', [SubmitController::class, 'store'])->middleware('throttle:10,1');

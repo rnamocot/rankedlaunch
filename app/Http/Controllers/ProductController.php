@@ -20,6 +20,9 @@ class ProductController extends Controller
         }
 
         $product->load('category', 'user');
+        $comments = $product->isLive()
+            ? \App\Models\Comment::with('user', 'replies.user')->where('product_id', $product->id)->whereNull('parent_id')->latest()->get()
+            : collect();
 
         $related = Product::live()
             ->where('category_id', $product->category_id)
@@ -34,6 +37,7 @@ class ProductController extends Controller
             'dailyRank' => $product->dailyRank(),
             'weeklyRank' => $product->weeklyRank(),
             'related' => $related,
+            'comments' => $comments,
         ]);
     }
 
