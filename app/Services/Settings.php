@@ -17,6 +17,9 @@ class Settings
 
     /** key => [label, type, help] */
     public const FIELDS = [
+        'Payments' => [
+            'payments_enabled' => ['Accept payments (sell Pro)', 'bool', 'Off: the site is free (early access) and Pro is hidden. Turn on only after your payment provider has approved your account.'],
+        ],
         'Launch offer' => [
             'promo.enabled' => ['Offer is on', 'bool', 'Turn the discounted launch offer on or off.'],
             'promo.price' => ['Offer price (USD)', 'money', 'What the first buyers pay for Pro.'],

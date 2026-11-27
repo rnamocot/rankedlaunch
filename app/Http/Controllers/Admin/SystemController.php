@@ -31,7 +31,7 @@ class SystemController extends Controller
                 'Mailer: '.config('mail.default').', from '.config('mail.from.address'),
                 'Set MAIL_MAILER, MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD in .env (e.g. Resend or Hostinger SMTP).'],
             ['Payments', $gateway->configured(),
-                ucfirst($gateway->name()).($gateway->configured() ? ' connected' : ' keys missing'),
+                ucfirst($gateway->name()).($gateway->configured() ? ' connected' : ' keys missing').' · selling Pro: '.(config('rankedlaunch.payments_enabled') ? 'on' : 'off (Admin → Settings)'),
                 'Add your '.ucfirst($gateway->name()).' keys to .env. See .env.example.'],
             ['Payment webhook secret', filled(config('rankedlaunch.'.$gateway->name().'.webhook_secret')),
                 'Webhook URL: '.route('webhooks.'.$gateway->name()),

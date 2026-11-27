@@ -48,4 +48,13 @@ class PaymentsOffTest extends TestCase
         $this->actingAs($user)->post('/submit/acme/launch', ['plan' => 'free', 'when' => 'now'])->assertSessionHasNoErrors();
         $this->assertSame('free', $p->fresh()->plan);
     }
+
+    public function test_keys_alone_do_not_turn_payments_on_the_switch_is_required(): void
+    {
+        config(['rankedlaunch.payment_provider' => 'polar', 'rankedlaunch.polar.access_token' => 'live-token', 'rankedlaunch.payments_enabled' => false]);
+        $this->get('/pricing')->assertSee('Free while we’re in early access.', false)->assertDontSee('Choose Pro');
+
+        config(['rankedlaunch.payments_enabled' => true]);
+        $this->get('/pricing')->assertSee('Choose Pro');
+    }
 }

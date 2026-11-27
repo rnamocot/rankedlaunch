@@ -71,6 +71,9 @@ return [
 
     // polar or lemonsqueezy
     'payment_provider' => env('PAYMENT_PROVIDER', 'polar'),
+    // Master switch for selling Pro. Off = the site presents as free (early access),
+    // even if provider keys are set. Flip in Admin → Settings once the provider approves you.
+    'payments_enabled' => (bool) env('RL_PAYMENTS_ENABLED', false),
 
     'polar' => [
         'access_token' => env('POLAR_ACCESS_TOKEN'),
