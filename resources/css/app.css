@@ -590,52 +590,50 @@
 }
 
 /* ------------------------------------------------------------------
-   Homepage hero backdrop: dot grid + rising bars + trend line
+   Homepage hero backdrop: one ranking graph
 ------------------------------------------------------------------- */
-.hero-dots {
-    background-image: radial-gradient(circle at center, var(--ink) 1px, transparent 1.2px);
-    background-size: 22px 22px;
-    opacity: 0.07;
-    mask-image: radial-gradient(ellipse 60% 55% at 50% 38%, #000 20%, transparent 75%);
-    -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 38%, #000 20%, transparent 75%);
-}
-
-.hero-bars {
-    opacity: 0.055;
-    mask-image: linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%);
-}
-
-.hero-bars rect {
-    transform-box: fill-box;
-    transform-origin: bottom;
-    animation: bar-rise 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.hero-trend {
-    opacity: 0.16;
+.hero-line {
+    opacity: 0.2;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    animation: trend-draw 2.2s cubic-bezier(0.4, 0, 0.2, 1) 0.6s forwards;
+    animation: trend-draw 2.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
 }
 
-@keyframes bar-rise {
-    from { transform: scaleY(0); }
+.hero-area {
+    opacity: 0;
+    animation: fade-in 1.2s ease-out 1.6s forwards;
 }
 
-@keyframes trend-draw {
-    to { stroke-dashoffset: 0; }
+.hero-runner {
+    opacity: 0;
+    animation: fade-in 0.6s ease-out 2.6s forwards;
 }
+
+.hero-end {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: end-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 2.6s forwards;
+}
+
+@keyframes trend-draw { to { stroke-dashoffset: 0; } }
+@keyframes fade-in { to { opacity: 1; } }
+@keyframes end-in {
+    from { opacity: 0; transform: scale(0.4); }
+    to { opacity: 0.3; transform: scale(1); }
+}
+
+.hero-runner { fill-opacity: 0.35; }
 
 @media (prefers-color-scheme: dark) {
-    .hero-dots { opacity: 0.12; }
-    .hero-bars { opacity: 0.08; }
-    .hero-trend { opacity: 0.22; }
+    .hero-line { opacity: 0.3; }
+    .hero-runner { fill-opacity: 0.5; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .hero-bars rect { animation: none; }
-    .hero-trend { animation: none; stroke-dashoffset: 0; }
+    .hero-line { animation: none; stroke-dashoffset: 0; }
+    .hero-area, .hero-end { animation: none; opacity: 1; }
+    .hero-runner { display: none; }
 }
 
 /* "+1" that floats up from a vote count in the live banner */
@@ -663,3 +661,4 @@
 @media (prefers-reduced-motion: reduce) {
     .vote-plus { animation: none; opacity: 0; }
 }
+

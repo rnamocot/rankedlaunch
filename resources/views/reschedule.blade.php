@@ -12,11 +12,7 @@
             <h1 class="large-title">Change launch date</h1>
             <p class="mt-3 text-ink-2">
                 {{ $product->name }} launches <span class="font-semibold text-ink">{{ $product->launch_date->format('l, M j') }}</span> on the {{ $planName }} plan.
-                @if ($product->plan === 'free')
-                    Free launches can move to any open date from the queue onwards. Want an earlier date? <a href="{{ route('submit.plan', $product) }}" class="font-medium text-ink underline underline-offset-2">Upgrade to pick any day</a>.
-                @else
-                    Pick any open date. Launches go live at 00:00 UTC.
-                @endif
+                Pick any open day, or today to go live now. Launches go live at 00:00 UTC.
             </p>
         </div>
 

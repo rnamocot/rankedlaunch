@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\Payment;
 use App\Models\Product;
@@ -68,11 +69,16 @@ class SubmitController extends Controller
         $this->authorizeOwner($request, $product);
         abort_unless(in_array($product->status, ['draft', 'awaiting_payment', 'pending']), 403);
 
+        // Spots left per day for each plan, so the picker can grey out full days.
+        $dates = collect(array_keys(config('rankedlaunch.plans')))
+            ->mapWithKeys(fn ($plan) => [$plan => collect($scheduler->dateOptions($plan, $product))->pluck('left', 'date')->mapWithKeys(fn ($left, $date) => [substr($date, 0, 10) => $left])])
+            ->all();
+
         return view('submit.plan', [
             'product' => $product,
             'plans' => config('rankedlaunch.plans'),
-            'freeDate' => $scheduler->nextFreeDate(),
-            'paidDates' => $scheduler->paidDates(),
+            'days' => $scheduler->dateOptions('free', $product),
+            'dates' => $dates,
             'pricing' => $pricing,
         ]);
     }
@@ -84,32 +90,46 @@ class SubmitController extends Controller
 
         $data = $request->validate([
             'plan' => ['required', Rule::in(array_keys(config('rankedlaunch.plans')))],
-            'launch_date' => ['required_unless:plan,free', 'nullable', 'date'],
+            'when' => ['nullable', Rule::in(['now', 'date'])],
+            'launch_date' => ['required_if:when,date', 'nullable', 'date'],
         ]);
 
+        // "List it now" = today's board. Otherwise the date they picked. Free for every plan.
+        $when = $data['when'] ?? (filled($data['launch_date'] ?? null) ? 'date' : 'now');
+        $date = $when === 'now' ? today() : Carbon::parse($data['launch_date'])->startOfDay();
+
+        if (! $scheduler->available($date, $data['plan'], $product)) {
+            return back()->withInput()->withErrors(['launch_date' => match (true) {
+                $data['plan'] === 'featured' => 'Pro spots for that day are taken. Pick another day, or choose '.config('rankedlaunch.plans.pro.name').'.',
+                $date->isToday() => 'Today’s board is full. Pick a launch date instead.',
+                default => 'That day is full. Pick another one.',
+            }]);
+        }
+
         if ($data['plan'] === 'free') {
-            // Free products keep their queue slot if they already had one.
             $firstBooking = ! in_array($product->status, ['pending', 'approved']);
-            if ($product->plan !== 'free' || ! $product->launch_date) {
-                $product->launch_date = $scheduler->nextFreeDate();
-            }
+            $review = config('rankedlaunch.review_listings');
+
             $product->plan = 'free';
-            $product->status = 'pending';
+            $product->launch_date = $date;
+            $product->status = $review ? 'pending' : 'approved';
             $product->save();
 
             if ($firstBooking) {
-                \App\Models\ActivityLog::record('booking', "{$product->name} joined the free queue for {$product->launch_date->format('M j')}", $product);
+                ActivityLog::record('booking', $date->isToday()
+                    ? "{$product->name} was listed for today"
+                    : "{$product->name} booked a free launch for {$date->format('M j')}", $product);
                 app(MakerMailer::class)->send($product, 'booked');
             }
 
-            return redirect()->route('launch.hub', $product)->with('status', "You're in! {$product->name} is booked for {$product->launch_date->format('M j, Y')}.");
-        }
+            $message = match (true) {
+                ! $review && $date->isToday() => "{$product->name} is live on today’s board.",
+                ! $review => "{$product->name} is booked for {$date->format('M j, Y')}.",
+                $date->isToday() => "{$product->name} is submitted. It goes on today’s board as soon as it’s approved.",
+                default => "{$product->name} is booked for {$date->format('M j, Y')}. We’ll review it shortly.",
+            };
 
-        $date = Carbon::parse($data['launch_date'])->startOfDay();
-        if (! $scheduler->paidDateAvailable($date, $data['plan'])) {
-            return back()->withInput()->withErrors(['launch_date' => $data['plan'] === 'featured'
-                ? 'Pro spots for that date are taken. Pick another date, or choose '.config('rankedlaunch.plans.pro.name').'.'
-                : 'That date is full. Pick another one.']);
+            return redirect()->route('launch.hub', $product)->with('status', $message);
         }
 
         $product->requested_plan = $data['plan'];

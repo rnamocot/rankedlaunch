@@ -33,11 +33,11 @@ class FeaturedFairnessTest extends TestCase
         $this->product(['plan' => 'featured', 'launch_date' => $date]);
 
         $scheduler = app(LaunchScheduler::class);
-        $this->assertFalse($scheduler->paidDateAvailable($date, 'featured'));
-        $this->assertTrue($scheduler->paidDateAvailable($date, 'pro'));
+        $this->assertFalse($scheduler->available($date, 'featured'));
+        $this->assertTrue($scheduler->available($date, 'pro'));
 
-        $day = collect($scheduler->paidDates())->first(fn ($d) => $d['date']->isSameDay($date));
-        $this->assertSame([8, 0], [$day['left'], $day['pro_left']]);
+        $pick = fn ($plan) => collect($scheduler->dateOptions($plan))->first(fn ($d) => $d['date']->isSameDay($date))['left'];
+        $this->assertSame([8, 0], [$pick('pro'), $pick('featured')]);
     }
 
     public function test_booking_pro_on_a_full_pro_day_is_refused(): void

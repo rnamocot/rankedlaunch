@@ -39,18 +39,20 @@ class MakerDashboardTest extends TestCase
         $this->assertSame($new, $p->fresh()->launch_date->toDateString());
     }
 
-    public function test_free_launch_cannot_jump_ahead_of_the_queue(): void
+    public function test_free_launch_can_move_to_any_open_day_including_today(): void
     {
         $user = User::factory()->create();
         $p = $this->product($user, ['plan' => 'free', 'launch_date' => today()->addDays(30)]);
 
-        $this->actingAs($user)->post("/dashboard/{$p->slug}/date", ['launch_date' => today()->addDays(2)->toDateString()])
-            ->assertSessionHasErrors('launch_date');
+        $sooner = today()->addDays(2)->toDateString();
+        $this->actingAs($user)->post("/dashboard/{$p->slug}/date", ['launch_date' => $sooner])->assertSessionHasNoErrors();
+        $this->assertSame($sooner, $p->fresh()->launch_date->toDateString());
 
-        // Moving later is fine
-        $later = today()->addDays(35)->toDateString();
-        $this->actingAs($user)->post("/dashboard/{$p->slug}/date", ['launch_date' => $later])->assertRedirect();
-        $this->assertSame($later, $p->fresh()->launch_date->toDateString());
+        // ...but not onto a full day
+        config(['rankedlaunch.free_slots_per_day' => 1]);
+        $full = today()->addDays(5);
+        $this->product(User::factory()->create(), ['plan' => 'free', 'launch_date' => $full]);
+        $this->actingAs($user)->post("/dashboard/{$p->slug}/date", ['launch_date' => $full->toDateString()])->assertSessionHasErrors('launch_date');
     }
 
     public function test_live_launches_and_other_peoples_launches_cannot_be_moved(): void

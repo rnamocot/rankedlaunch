@@ -33,24 +33,48 @@ class LaunchFlowTest extends TestCase
         return Product::firstWhere('slug', 'acme-notes');
     }
 
-    public function test_free_launch_joins_queue_and_goes_live_after_approval(): void
+    public function test_free_list_now_goes_on_todays_board_after_review(): void
     {
         $user = User::factory()->create();
         $product = $this->submitProduct($user);
 
-        $this->actingAs($user)->get("/submit/{$product->slug}/launch")->assertOk();
-        $this->actingAs($user)->post("/submit/{$product->slug}/launch", ['plan' => 'free'])->assertRedirect();
+        $this->actingAs($user)->get("/submit/{$product->slug}/launch")->assertOk()->assertSee('List it now')->assertSee('Schedule a launch');
+        $this->actingAs($user)->post("/submit/{$product->slug}/launch", ['plan' => 'free', 'when' => 'now'])->assertRedirect();
 
         $product->refresh();
         $this->assertSame('pending', $product->status);
         $this->assertSame('free', $product->plan);
         $this->assertFalse($product->is_dofollow);
-        $this->assertTrue($product->launch_date->isSameDay(today()->addDays(config('rankedlaunch.free_wait_days'))));
+        $this->assertTrue($product->launch_date->isToday());
 
-        // Not public before launch
+        // Not public until approved
         $this->app['auth']->forgetGuards();
         $this->get("/apps/{$product->slug}")->assertNotFound();
         $this->actingAs($user)->get("/apps/{$product->slug}")->assertOk();
+    }
+
+    public function test_free_launch_can_pick_any_open_day(): void
+    {
+        $user = User::factory()->create();
+        $product = $this->submitProduct($user);
+        $day = today()->addDays(2)->toDateString();
+
+        $this->actingAs($user)->post("/submit/{$product->slug}/launch", ['plan' => 'free', 'when' => 'date', 'launch_date' => $day])->assertRedirect();
+
+        $this->assertSame($day, $product->fresh()->launch_date->toDateString());
+    }
+
+    public function test_with_review_off_list_now_is_live_instantly(): void
+    {
+        config(['rankedlaunch.review_listings' => false]);
+        $user = User::factory()->create();
+        $product = $this->submitProduct($user);
+
+        $this->actingAs($user)->post("/submit/{$product->slug}/launch", ['plan' => 'free', 'when' => 'now'])->assertRedirect();
+
+        $this->assertTrue($product->fresh()->isLive());
+        $this->app['auth']->forgetGuards();
+        $this->get('/')->assertSee('Acme Notes');
     }
 
     public function test_paid_launch_flow_with_simulated_payment(): void

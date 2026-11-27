@@ -128,13 +128,13 @@
                 </section>
             @endif
 
-            {{-- Skip the queue --}}
-            @if ($isFree && ! $live && in_array($status, ['pending', 'approved']) && $daysUntilLaunch > 1)
+            {{-- Upgrade: backlink and visibility (dates are free on every plan) --}}
+            @if ($isFree && in_array($status, ['pending', 'approved']) && ! $dayOver)
                 <section class="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
                     <div class="flex-1">
-                        <p class="font-semibold">Launch {{ $daysUntilLaunch - 1 }} days sooner</p>
+                        <p class="font-semibold">Make this launch help your SEO</p>
                         <p class="mt-0.5 text-sm text-ink-2">
-                            Pick any date with a {{ config('rankedlaunch.plans.pro.name') }} and get a dofollow backlink and badge.
+                            A {{ config('rankedlaunch.plans.pro.name') }} turns your link into a dofollow backlink, for good.
                             @if ($pricing->promoActive())
                                 <span class="font-medium text-ink">{{ \App\Services\Pricing::dollars($pricing->priceFor('pro')) }} instead of {{ \App\Services\Pricing::dollars($pricing->regularPrice('pro')) }}, {{ $pricing->promoRemaining() }} launch-offer spots left.</span>
                             @else
@@ -142,7 +142,7 @@
                             @endif
                         </p>
                     </div>
-                    <a href="{{ route('submit.plan', $product) }}" class="btn btn-primary shrink-0">Skip the queue</a>
+                    <a href="{{ route('submit.plan', $product) }}" class="btn btn-primary shrink-0">Upgrade</a>
                 </section>
             @endif
 

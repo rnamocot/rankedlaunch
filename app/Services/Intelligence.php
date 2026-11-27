@@ -132,24 +132,20 @@ class Intelligence
         if ($submitted >= 20) {
             $rate = round($paid / $submitted * 100);
             $rate < 10
-                ? $add('watch', "Only {$rate}% of submissions pay", 'Most makers choose free. Try a shorter offer window, a lower Pro price, or a longer free wait.', 'Settings', route('admin.settings'))
+                ? $add('watch', "Only {$rate}% of submissions pay", 'Most makers choose free. Try a stronger launch offer, or show the backlink’s SEO value more clearly.', 'Settings', route('admin.settings'))
                 : $add('good', "{$rate}% of submissions pay", 'Healthy paid conversion over the last 30 days.');
         }
 
         // --- Queue capacity ---------------------------------------------------
-        $freeWait = (int) today()->diffInDays($this->scheduler->nextFreeDate());
-        if ($freeWait > config('rankedlaunch.free_wait_days') + 14) {
-            $add('watch', "Free queue is {$freeWait} days long", 'Long waits push makers to pay, but too long and they leave. Consider more free slots per day.', 'Settings', route('admin.settings'));
-        }
 
-        $fullDays = collect($this->scheduler->paidDates())->take(7)->filter(fn ($d) => $d['left'] === 0)->count();
+        $fullDays = collect($this->scheduler->paidDates(7))->filter(fn ($d) => $d['left'] === 0)->count();
         if ($fullDays >= 4) {
             $add('watch', "Paid launches are full on {$fullDays} of the next 7 days", 'Demand is high. You could raise the Pro price or add paid slots.', 'Settings', route('admin.settings'));
         }
 
         // --- Content ---------------------------------------------------------
         if (! Product::live()->whereDate('launch_date', today())->exists()) {
-            $add('watch', 'No launches today', 'An empty board looks quiet to visitors. Feature a strong product, or move a queued launch to today.', 'Products', route('admin.products.index', ['status' => 'scheduled']));
+            $add('watch', 'No launches today', 'An empty board looks quiet to visitors. Feature a strong product, or move a scheduled launch to today.', 'Products', route('admin.products.index', ['status' => 'scheduled']));
         }
 
         if (empty($out)) {

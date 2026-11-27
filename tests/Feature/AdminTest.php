@@ -62,7 +62,7 @@ class AdminTest extends TestCase
         $this->actingAs($this->admin)->put('/admin/settings', [
             'promo__enabled' => '1', 'promo__price' => '15', 'promo__limit' => '10', 'promo__label' => 'Early bird',
             'plans__pro__price' => '35', 'plans__featured__price' => '59', 'plans__featured__featured_days' => '5',
-            'free_wait_days' => '21', 'free_slots_per_day' => '8', 'paid_slots_per_day' => '12', 'featured_slots_per_day' => '3',
+            'review_listings' => '0', 'free_slots_per_day' => '21', 'paid_slots_per_day' => '12', 'featured_slots_per_day' => '3',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertSame(1500, config('rankedlaunch.promo.price'));
@@ -71,7 +71,8 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('activity_logs', ['type' => 'settings']);
 
         app(\App\Services\Settings::class)->apply();
-        $this->assertSame(21, config('rankedlaunch.free_wait_days'));
+        $this->assertSame(21, config('rankedlaunch.free_slots_per_day'));
+        $this->assertFalse(config('rankedlaunch.review_listings'));
     }
 
     public function test_admin_can_edit_any_product_field(): void

@@ -18,15 +18,16 @@ return [
         'umami_website_id' => env('UMAMI_WEBSITE_ID'),
     ],
 
-    // Launch queue
-    'free_wait_days' => (int) env('RL_FREE_WAIT_DAYS', 28),
-    'free_slots_per_day' => (int) env('RL_FREE_SLOTS_PER_DAY', 10),
+    // Listings and launches. Every plan can list today or pick any future date.
+    // When true, new listings wait for admin approval; when false they go live instantly.
+    'review_listings' => (bool) env('RL_REVIEW_LISTINGS', true),
+    'max_days_ahead' => 90,
+    'free_slots_per_day' => (int) env('RL_FREE_SLOTS_PER_DAY', 25),
     'paid_slots_per_day' => (int) env('RL_PAID_SLOTS_PER_DAY', 10),
     // Pro launches per day (counted inside paid_slots_per_day). Keeps the Featured rotation small and fair.
     'featured_slots_per_day' => (int) env('RL_FEATURED_SLOTS_PER_DAY', 2),
     // How many Pro launches the homepage Featured row shows at once (rotates evenly).
     'featured_on_homepage' => 3,
-    'paid_max_days_ahead' => 90,
 
     // Plans (prices in USD cents). variant_id = LemonSqueezy variant for that plan.
     'plans' => [
@@ -34,8 +35,9 @@ return [
             'name' => 'Free',
             'price' => 0,
             'features' => [
-                'Joins the launch queue',
-                'Listed on your launch day',
+                'List today or pick any launch date',
+                'Ranked on the daily board',
+                'Launch stats and share kit',
                 'Nofollow link',
             ],
         ],
@@ -44,10 +46,9 @@ return [
             'price' => 2900,
             'variant_id' => env('LEMONSQUEEZY_VARIANT_PRO'),
             'features' => [
-                'Skip the queue, pick your date',
-                'Dofollow backlink',
-                'Launch badge for your site',
-                'Kept in rankings forever',
+                'Everything in Free',
+                'Dofollow backlink (helps your SEO)',
+                'Priority review',
             ],
         ],
         'featured' => [
@@ -61,7 +62,6 @@ return [
                 'Pinned at the top of your category for 7 days',
                 '“Featured” label next to your launch',
                 'Only 2 Pro launches per day',
-                'Priority review within 24h',
             ],
         ],
     ],

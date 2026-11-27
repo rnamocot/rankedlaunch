@@ -97,8 +97,8 @@
                                         <div class="flex shrink-0 flex-wrap items-center gap-2">
                                             @if (in_array($product->status, ['draft', 'awaiting_payment']))
                                                 <a href="{{ route('submit.plan', $product) }}" class="btn btn-primary btn-sm">Finish booking</a>
-                                            @elseif ($product->status === 'pending' && $product->plan === 'free' && $days > 1)
-                                                <a href="{{ route('submit.plan', $product) }}" class="btn btn-secondary btn-sm">Skip queue</a>
+                                            @elseif (in_array($product->status, ['pending', 'approved']) && $product->plan === 'free' && ! $product->isLive())
+                                                <a href="{{ route('submit.plan', $product) }}" class="btn btn-secondary btn-sm">Upgrade</a>
                                             @endif
                                             @if ($canMove)
                                                 <a href="{{ route('launch.date', $product) }}" class="btn btn-outline btn-sm" title="Change launch date"><x-icon name="calendar" :size="15" /><span class="sr-only sm:not-sr-only">Date</span></a>

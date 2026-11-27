@@ -28,9 +28,9 @@ class Settings
             'plans.featured.price' => ['Pro (USD)', 'money', 'Regular one-time price.'],
             'plans.featured.featured_days' => ['Pro pinned days', 'int', 'How long Pro launches stay pinned on the homepage.'],
         ],
-        'Launch queue' => [
-            'free_wait_days' => ['Free queue wait (days)', 'int', 'Earliest a free launch can go live.'],
-            'free_slots_per_day' => ['Free launches per day', 'int', 'Cap on free launches each day.'],
+        'Listings' => [
+            'review_listings' => ['Review listings before they go live', 'bool', 'On: you approve each new listing. Off: listings go live instantly (you can still remove them).'],
+            'free_slots_per_day' => ['Free launches per day', 'int', 'Cap on free launches each day, so the board doesn’t get flooded.'],
             'paid_slots_per_day' => ['Paid launches per day', 'int', 'Cap on paid launches (Listing and Pro) each day.'],
             'featured_slots_per_day' => ['Pro launches per day', 'int', 'Pro is part of the paid cap above. Keep it small so Featured spots stay valuable.'],
         ],

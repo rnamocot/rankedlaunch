@@ -40,7 +40,7 @@ class MakerExperienceTest extends TestCase
         $this->actingAs($user)->get('/dashboard/acme')->assertOk()
             ->assertSee('What happens next')
             ->assertSee('Your launch starts in')
-            ->assertSee('Skip the queue')
+            ->assertSee('Make this launch help your SEO')
             ->assertSee('Share kit')
             ->assertSee('Launch-day checklist');
 

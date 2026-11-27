@@ -1,44 +1,56 @@
 {{--
-    Homepage hero background: rankings, visualised.
-    A soft dot grid, a field of thin bars that rise toward the right (products climbing),
-    and one trend line that draws itself once. Ink at very low opacity, so it works
-    in light and dark mode and never competes with the headline. Animates once, then rests.
+    Homepage hero background: one ranking graph. A single line climbs from #5 to #1,
+    with a soft area under it and a dot that travels along the line. No grid.
+    Ink at low opacity, so it works in light and dark mode and never competes with the headline.
 --}}
 @php
-    // Deterministic "climbing" bars: an upward curve with gentle variation.
-    $n = 64;
     $W = 1200;
-    $H = 260;
-    $gap = 6;
-    $bw = ($W - $gap * ($n - 1)) / $n;
-    $bars = [];
-    $points = [];
-    for ($i = 0; $i < $n; $i++) {
-        $t = $i / ($n - 1);
-        $trend = 0.12 + 0.78 * pow($t, 1.6);                // rises faster toward the right
-        $wiggle = 0.10 * sin($i * 1.7) + 0.06 * sin($i * 0.53 + 1.2);
-        $h = max(0.05, min(1, $trend + $wiggle)) * $H;
-        $x = $i * ($bw + $gap);
-        $bars[] = ['x' => round($x, 2), 'h' => round($h, 2), 'd' => round($i * 0.018, 3)];
-        $points[] = round($x + $bw / 2, 2).','.round($H - $trend * $H * 1.04, 2);
+    $H = 640;
+    $x0 = 40; $x1 = 1160; $top = 300; $bottom = 600;
+    $ranks = [5, 5, 4, 4, 4, 3, 3, 2, 2, 2, 1, 1];
+    $n = count($ranks);
+    $rankY = fn ($r) => $top + ($r - 1) * (($bottom - $top) / 4);
+    $pts = [];
+    foreach ($ranks as $i => $r) {
+        $pts[] = [round($x0 + $i * (($x1 - $x0) / ($n - 1)), 1), round($rankY($r), 1)];
     }
+    $line = 'M'.implode(' L', array_map(fn ($p) => $p[0].' '.$p[1], $pts));
+    $area = $line.' L'.end($pts)[0].' '.$H.' L'.$pts[0][0].' '.$H.' Z';
+    $end = end($pts);
 @endphp
 <div aria-hidden="true" class="hero-backdrop pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-    {{-- Dot grid, fading out from the centre --}}
-    <div class="hero-dots absolute inset-0"></div>
+    <svg class="absolute inset-0 h-full w-full text-ink" viewBox="0 0 {{ $W }} {{ $H }}" preserveAspectRatio="xMidYMax slice">
+        <defs>
+            <linearGradient id="hero-area" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="currentColor" stop-opacity="0.07" />
+                <stop offset="1" stop-color="currentColor" stop-opacity="0" />
+            </linearGradient>
+            <linearGradient id="hero-edges" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#fff" stop-opacity="0" />
+                <stop offset="0.1" stop-color="#fff" stop-opacity="1" />
+                <stop offset="0.9" stop-color="#fff" stop-opacity="1" />
+                <stop offset="1" stop-color="#fff" stop-opacity="0" />
+            </linearGradient>
+            <mask id="hero-mask"><rect width="{{ $W }}" height="{{ $H }}" fill="url(#hero-edges)" /></mask>
+        </defs>
 
-    {{-- Rising bars + trend line along the bottom --}}
-    <svg class="absolute inset-x-0 bottom-0 h-[55%] w-full text-ink" viewBox="0 0 {{ $W }} {{ $H }}" preserveAspectRatio="none">
-        <g class="hero-bars">
-            @foreach ($bars as $b)
-                <rect x="{{ $b['x'] }}" y="{{ $H - $b['h'] }}" width="{{ round($bw, 2) }}" height="{{ $b['h'] }}" rx="2"
-                      fill="currentColor" style="animation-delay: {{ $b['d'] }}s" />
-            @endforeach
+        <g mask="url(#hero-mask)">
+            <path d="{{ $area }}" fill="url(#hero-area)" class="hero-area" />
+            <path id="hero-graph" d="{{ $line }}" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linejoin="round" stroke-linecap="round" pathLength="1" class="hero-line" />
+
+            {{-- Dot travelling along the line --}}
+            <circle r="5" fill="currentColor" class="hero-runner">
+                <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear" begin="2.6s" data-motion>
+                    <mpath href="#hero-graph" />
+                </animateMotion>
+            </circle>
+
+            {{-- #1 at the end of the climb --}}
+            <circle cx="{{ $end[0] }}" cy="{{ $end[1] }}" r="10" fill="none" stroke="currentColor" stroke-width="1.5" class="hero-end" />
         </g>
-        <polyline class="hero-trend" points="{{ implode(' ', $points) }}" fill="none" stroke="currentColor"
-                  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" pathLength="1" />
     </svg>
 
-    {{-- Fade the bottom into the page so the content below sits cleanly --}}
+    {{-- Fade into the page below --}}
     <div class="absolute inset-x-0 bottom-0 h-24 bg-linear-to-b from-transparent to-bg"></div>
 </div>

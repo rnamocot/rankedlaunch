@@ -1,6 +1,6 @@
-<x-layout title="Pricing" description="Launch for free, or skip the queue with a dofollow backlink. One-time payment, no subscription.">
+<x-layout title="Pricing" description="List your product free, today or on any launch day. Add a dofollow backlink or homepage feature with a one-time payment.">
     @php($faqs = [
-        'How long is the free queue?' => 'Around '.config('rankedlaunch.free_wait_days').' days, depending on demand. We cap free launches per day so every product gets seen.',
+        'Can I pick my launch day for free?' => 'Yes. Every plan, including Free, can list today or pick any open day. Each day has a limited number of spots so every product gets seen; full days are greyed out.',
         'What is a dofollow backlink?' => 'A link search engines count toward your site’s authority. Paid launches keep theirs permanently; free launches use nofollow.',
         'Can I list a product that’s already live?' => 'Yes. Any working product can launch here, whether it’s brand new or has been around for years. Many makers use it to reach new users and earn a backlink and badge for an established product.',
         'Is it really one-time?' => 'Yes. You pay once per launch. No renewals, no subscription.',
@@ -17,7 +17,7 @@
     </x-slot:head>
     <section class="intro mx-auto max-w-3xl px-4 pt-14 pb-10 text-center sm:px-6">
         <h1 class="large-title">Pay once. Launch when you want.</h1>
-        <p class="mx-auto mt-4 max-w-xl text-[1.0625rem] text-ink-2">No subscription. Free launches join the queue; paid launches pick their own date and get a backlink that stays.</p>
+        <p class="mx-auto mt-4 max-w-xl text-[1.0625rem] text-ink-2">No subscription. Every plan lists today or on the day you pick. Paid plans add a backlink that stays, and Pro adds homepage visibility.</p>
     </section>
 
     <div class="mx-auto max-w-5xl px-4 sm:px-6">
@@ -45,7 +45,7 @@
                     @endforeach
                 </ul>
                 <a href="{{ route('submit') }}" class="btn {{ $highlight ? 'btn-primary' : 'btn-secondary' }} mt-8 w-full">
-                    {{ $key === 'free' ? 'Join the queue' : 'Choose '.$plan['name'] }}
+                    {{ $key === 'free' ? 'Start free' : 'Choose '.$plan['name'] }}
                 </a>
             </section>
         @endforeach

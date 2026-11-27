@@ -14,11 +14,11 @@ class PlanActivator
 
         $product->plan = $plan;
         $product->is_dofollow = true;
-        $product->launch_date = $product->requested_launch_date ?? today()->addDay();
+        $product->launch_date = $product->requested_launch_date ?? today();
         $product->requested_plan = null;
 
         if ($product->status === 'awaiting_payment' || $product->status === 'draft') {
-            $product->status = 'pending';
+            $product->status = config('rankedlaunch.review_listings') ? 'pending' : 'approved';
         }
 
         if ($plan === 'featured') {

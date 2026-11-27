@@ -1,6 +1,5 @@
 <x-layout title="Launch your product" description="Launch your SaaS or app on RankedLaunch. Get early users, a dofollow backlink, a permanent page that ranks on Google, and a winner badge. One-time payment.">
     @php
-        $freeWait = (int) today()->diffInDays($freeDate);
         $proPrice = \App\Services\Pricing::dollars($pricing->priceFor('pro'));
     @endphp
 
@@ -16,7 +15,7 @@
             <a href="{{ route('pricing') }}" class="btn btn-outline btn-lg">See pricing</a>
         </div>
         <p class="mt-5 text-sm text-ink-2">
-            Free queue opens on <span class="font-semibold text-ink">{{ $freeDate->format('M j') }}</span> ({{ $freeWait }} days away) · Paid launches as soon as <span class="font-semibold text-ink">tomorrow</span>
+            Already live? <span class="font-semibold text-ink">List it today.</span> Launching soon? <span class="font-semibold text-ink">Pick any day, free.</span>
         </p>
     </section>
 
@@ -68,7 +67,7 @@
         <div class="tray mt-10" data-reveal><ol class="card overflow-hidden">
             @foreach ([
                 ['Submit in two minutes', 'Name, link, tagline, logo. Screenshots if you have them.'],
-                ['Pick your launch date', 'Join the free queue, or skip it and choose any day that works for you.'],
+                ['List now or pick a day', 'Already live? Go on today’s board. Launching soon? Choose any open day. Both are free.'],
                 ['We review it', 'A real person checks every listing, usually within 24 hours. Spam never makes the board.'],
                 ['Launch day', 'You go live at 00:00 UTC. Share your page, collect votes, climb the ranks.'],
                 ['Keep the results', 'Your page, backlink and badge stay up for good. The stats keep counting.'],
@@ -87,19 +86,20 @@
     {{-- Free vs Pro --}}
     <section class="mx-auto mt-24 max-w-3xl px-4 sm:px-6">
         <h2 class="section-title" data-reveal>Free or paid?</h2>
-        <p class="mx-auto mt-2 max-w-md text-center text-ink-2">Both get a real launch. A {{ config('rankedlaunch.plans.pro.name') }} gets it sooner, and gets more out of it.</p>
+        <p class="mx-auto mt-2 max-w-md text-center text-ink-2">Both launch on the day you choose. A {{ config('rankedlaunch.plans.pro.name') }} adds a backlink that helps your SEO.</p>
 
         <div class="tray mt-10" data-reveal><div class="card overflow-hidden text-sm">
             <div class="grid grid-cols-[1fr_5.5rem_5.5rem] items-center px-5 py-3 text-xs font-semibold text-ink-2 sm:grid-cols-[1fr_8rem_8rem]">
                 <span></span><span class="text-center">Free</span><span class="text-center text-ink">{{ config('rankedlaunch.plans.pro.name') }} · {{ $proPrice }}</span>
             </div>
             @foreach ([
-                ['Launch date', 'In '.$freeWait.' days', 'You choose'],
+                ['List today or pick any day', true, true],
                 ['Homepage, rankings and category', true, true],
                 ['Launch stats (views, clicks, votes)', true, true],
                 ['Launch-day kit', true, true],
                 ['Dofollow backlink', false, true],
-                ['Winner and launch badges', false, true],
+                ['Winner and launch badges', true, true],
+                ['Priority review', false, true],
                 ['Stays in rankings forever', true, true],
             ] as [$label, $free, $pro])
                 <div class="list-row grid grid-cols-[1fr_5.5rem_5.5rem] items-center px-5 py-3 sm:grid-cols-[1fr_8rem_8rem]" style="--inset: 1.25rem">

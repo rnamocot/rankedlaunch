@@ -28,7 +28,6 @@ class MakersController extends Controller
         return view('launch', [
             'stats' => $stats,
             'showStats' => $showStats,
-            'freeDate' => $scheduler->nextFreeDate(),
             'recent' => $recent,
         ]);
     }

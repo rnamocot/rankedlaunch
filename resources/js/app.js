@@ -94,32 +94,33 @@ document.addEventListener('click', (event) => {
     toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 });
 
-// Launch plan picker: show the date grid only for paid plans
+// Go-live step: "list it now" or a date (free for every plan); full days depend on the plan.
 document.querySelectorAll('[data-plan-form]').forEach((form) => {
-    const sync = () => {
-        const plan = form.querySelector('input[name="plan"]:checked')?.value;
-        const dates = form.querySelector('[data-paid-dates]');
-        const submit = form.querySelector('[data-plan-submit]');
-        if (dates) dates.hidden = !plan || plan === 'free';
+    const dates = JSON.parse(form.dataset.dates || '{}');
 
-        // Pro has its own daily cap: grey out dates with no Pro spots left.
+    const sync = () => {
+        const plan = form.querySelector('input[name="plan"]:checked')?.value || 'free';
+        const when = form.querySelector('input[name="when"]:checked')?.value || 'now';
+        const picker = form.querySelector('[data-date-picker]');
+        const submit = form.querySelector('[data-plan-submit]');
+        const left = dates[plan] || {};
+
+        if (picker) picker.hidden = when !== 'date';
+        if (submit) submit.textContent = submit.dataset[plan] ?? submit.textContent;
+
         form.querySelectorAll('input[name="launch_date"]').forEach((input) => {
-            const left = Number(input.dataset.left);
-            const proLeft = Number(input.dataset.proLeft);
-            const available = plan === 'featured' ? proLeft > 0 : left > 0;
+            const spots = left[input.value] ?? 0;
             const label = input.closest('[data-date]');
             const note = label.querySelector('[data-date-note]');
-            input.disabled = !available;
-            if (!available && input.checked) input.checked = false;
-            label.classList.toggle('opacity-35', !available);
-            label.classList.toggle('cursor-not-allowed', !available);
-            label.classList.toggle('cursor-pointer', available);
-            if (left === 0) note.textContent = 'Full';
-            else if (plan === 'featured') note.textContent = proLeft === 0 ? 'Pro full' : `${proLeft} Pro left`;
-            else note.textContent = left <= 3 ? `${left} left` : '';
+            input.disabled = spots <= 0;
+            if (input.disabled && input.checked) input.checked = false;
+            label.classList.toggle('opacity-35', spots <= 0);
+            label.classList.toggle('cursor-not-allowed', spots <= 0);
+            label.classList.toggle('cursor-pointer', spots > 0);
+            note.textContent = spots <= 0 ? 'Full' : spots <= 3 ? `${spots} left` : '';
         });
-        if (submit && plan) submit.textContent = submit.dataset[plan] ?? submit.textContent;
     };
+
     form.addEventListener('change', sync);
     sync();
 });
@@ -373,3 +374,9 @@ document.querySelectorAll('[data-rank-live]').forEach((board) => {
         if (event.target.closest('[data-vote]')) setTimeout(poll, 600);
     });
 });
+
+// Hero graph: the travelling dot is SVG (SMIL) animation, which ignores the
+// reduced-motion setting, so remove it for people who asked for less motion.
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('[data-motion]').forEach((el) => el.remove());
+}

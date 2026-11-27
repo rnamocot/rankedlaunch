@@ -136,10 +136,7 @@ class LaunchEmail extends Mailable
 
     private function upsellLine(): ?string
     {
-        $p = $this->product;
-        $days = $p->launch_date ? (int) today()->diffInDays($p->launch_date, false) : 0;
-
-        if ($p->plan !== 'free' || $days <= 2) {
+        if ($this->product->plan !== 'free') {
             return null;
         }
 
@@ -147,6 +144,6 @@ class LaunchEmail extends Mailable
         $price = Pricing::dollars($pricing->priceFor('pro'));
         $offer = $pricing->isPromoPlan('pro') ? " (launch offer, {$pricing->promoRemaining()} ".Str::plural('spot', $pricing->promoRemaining()).' left)' : '';
 
-        return "Want to launch sooner? ".config('rankedlaunch.plans.pro.name')." lets you pick any date and adds a dofollow backlink, for {$price}{$offer}.";
+        return 'Want your launch to help your SEO too? A '.config('rankedlaunch.plans.pro.name')." adds a dofollow backlink from your page, for {$price}{$offer}, one-time.";
     }
 }

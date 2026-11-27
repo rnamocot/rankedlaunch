@@ -6,7 +6,7 @@
 
 - Makers submit a product (name, website, tagline, description, logo, category). New and established products are both welcome.
 - Every listing is reviewed by a person before it goes live.
-- Free launches join a queue (about {{ config('rankedlaunch.free_wait_days') }} days). Paid launches ({{ config('rankedlaunch.plans.pro.name') }} and {{ config('rankedlaunch.plans.featured.name') }}) pick their own date and get a dofollow backlink. {{ config('rankedlaunch.plans.featured.name') }} launches are also pinned on the homepage.
+- Makers list an already-live product today, or schedule a launch on any open day, free on every plan. Paid plans ({{ config('rankedlaunch.plans.pro.name') }} and {{ config('rankedlaunch.plans.featured.name') }}) add a dofollow backlink. {{ config('rankedlaunch.plans.featured.name') }} launches are also pinned on the homepage.
 - Rankings are by upvotes only; paid plans never change rank. Pro launches are labelled "Featured" and shown in a rotating homepage section.
 - Products are ranked by upvotes against everything launching the same day and the same week. The top 3 get a "Product of the Day" or "Product of the Week" badge.
 - Pricing is a one-time payment per launch. No subscription.

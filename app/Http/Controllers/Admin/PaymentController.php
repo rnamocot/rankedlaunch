@@ -32,7 +32,7 @@ class PaymentController extends Controller
 
     /**
      * Records a refund here. The money itself is returned in Polar / LemonSqueezy.
-     * Optionally moves the launch back to the free queue.
+     * Optionally switches the launch to the Free plan.
      */
     public function refund(Request $request, Payment $payment)
     {

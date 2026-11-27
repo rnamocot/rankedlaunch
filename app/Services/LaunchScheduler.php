@@ -6,147 +6,97 @@ use App\Models\Product;
 use Illuminate\Support\Carbon;
 
 /**
- * Launch calendar capacity.
+ * Launch calendar. Every plan can launch today ("list it now") or on any future day;
+ * the only limits are the daily caps, so the board never gets flooded:
  *  - free_slots_per_day:     free launches per day
  *  - paid_slots_per_day:     Listing + Pro launches per day (shared)
- *  - featured_slots_per_day: Pro launches per day (inside the paid cap), so the
- *                            homepage Featured rotation never gets crowded.
+ *  - featured_slots_per_day: Pro launches per day (inside the paid cap)
  */
 class LaunchScheduler
 {
     /** Statuses that hold a slot in the calendar. */
     private const HOLDING = ['pending', 'approved'];
 
-    public function nextFreeDate(): Carbon
+    /**
+     * Each day from today, with how many spots are left for $plan.
+     * $exclude: a product moving dates doesn't count against itself.
+     *
+     * @return array<int, array{date: Carbon, left: int, current: bool}>
+     */
+    public function dateOptions(string $plan, ?Product $exclude = null, ?int $days = null): array
     {
-        $date = today()->addDays(config('rankedlaunch.free_wait_days'));
-        $limit = config('rankedlaunch.free_slots_per_day');
+        $days ??= config('rankedlaunch.max_days_ahead', 90);
+        $end = today()->addDays($days);
 
-        for ($i = 0; $i < 730; $i++) {
-            if ($this->countOn($date, 'free') < $limit) {
-                return $date;
-            }
-            $date = $date->copy()->addDay();
-        }
-
-        return $date;
-    }
-
-    /** Dates a paid launch can pick: paid slots left, and Pro slots left. */
-    public function paidDates(): array
-    {
-        $days = config('rankedlaunch.paid_max_days_ahead');
-        $paidCap = config('rankedlaunch.paid_slots_per_day');
-        $proCap = config('rankedlaunch.featured_slots_per_day');
-
-        // One query for the whole range instead of one per day.
-        $counts = Product::whereIn('status', self::HOLDING)
-            ->where('plan', '!=', 'free')
-            ->whereDate('launch_date', '>', today())
-            ->whereDate('launch_date', '<=', today()->addDays($days))
-            ->selectRaw("DATE(launch_date) as day, COUNT(*) as paid, SUM(CASE WHEN plan = 'featured' THEN 1 ELSE 0 END) as pro")
+        $rows = Product::whereIn('status', self::HOLDING)
+            ->when($exclude, fn ($q) => $q->whereKeyNot($exclude->id))
+            ->whereDate('launch_date', '>=', today())
+            ->whereDate('launch_date', '<=', $end)
+            ->selectRaw("DATE(launch_date) as day,
+                SUM(CASE WHEN plan = 'free' THEN 1 ELSE 0 END) as free,
+                SUM(CASE WHEN plan != 'free' THEN 1 ELSE 0 END) as paid,
+                SUM(CASE WHEN plan = 'featured' THEN 1 ELSE 0 END) as pro")
             ->groupBy('day')
             ->get()
             ->keyBy('day');
 
-        $dates = [];
-        for ($i = 1; $i <= $days; $i++) {
-            $date = today()->addDays($i);
-            $row = $counts[$date->toDateString()] ?? null;
-            $left = max(0, $paidCap - (int) ($row->paid ?? 0));
-            $dates[] = [
-                'date' => $date,
-                'left' => $left,
-                'pro_left' => min($left, max(0, $proCap - (int) ($row->pro ?? 0))),
-            ];
-        }
-
-        return $dates;
-    }
-
-    public function paidDateAvailable(Carbon $date, string $plan = 'pro'): bool
-    {
-        $inRange = $date->gt(today()) && $date->lte(today()->addDays(config('rankedlaunch.paid_max_days_ahead')));
-
-        if (! $inRange || $this->countOn($date, 'paid') >= config('rankedlaunch.paid_slots_per_day')) {
-            return false;
-        }
-
-        return $plan !== 'featured' || $this->countOn($date, 'featured') < config('rankedlaunch.featured_slots_per_day');
-    }
-
-    /**
-     * Dates an already-booked product can move to, for its plan.
-     * Paid: tomorrow onwards. Free: from the queue's next open date onwards (no skipping the queue).
-     * Its own current slot doesn't count against it.
-     *
-     * @return array<int, array{date: Carbon, left: int, current: bool}>
-     */
-    public function rescheduleOptions(Product $product): array
-    {
-        $plan = $product->plan;
-        $free = $plan === 'free';
-        $start = $free ? max(today()->addDay(), $this->nextFreeDate()->min($product->launch_date ?? today()->addYear())) : today()->addDay();
-        $days = $free ? 60 : config('rankedlaunch.paid_max_days_ahead');
-
-        $cap = match ($plan) {
-            'free' => config('rankedlaunch.free_slots_per_day'),
-            'featured' => config('rankedlaunch.featured_slots_per_day'),
-            default => config('rankedlaunch.paid_slots_per_day'),
-        };
-        $kind = match ($plan) { 'free' => 'free', 'featured' => 'featured', default => 'paid' };
-
-        $counts = Product::whereIn('status', self::HOLDING)
-            ->whereKeyNot($product->id)
-            ->whereDate('launch_date', '>=', $start)
-            ->whereDate('launch_date', '<=', $start->copy()->addDays($days))
-            ->when($kind === 'free', fn ($q) => $q->where('plan', 'free'))
-            ->when($kind === 'paid', fn ($q) => $q->where('plan', '!=', 'free'))
-            ->when($kind === 'featured', fn ($q) => $q->where('plan', 'featured'))
-            ->selectRaw('DATE(launch_date) as day, COUNT(*) as n')
-            ->groupBy('day')
-            ->pluck('n', 'day');
-
-        // Pro also has to fit inside the overall paid cap.
-        $paidCounts = $kind === 'featured'
-            ? Product::whereIn('status', self::HOLDING)->whereKeyNot($product->id)->where('plan', '!=', 'free')
-                ->whereDate('launch_date', '>=', $start)->whereDate('launch_date', '<=', $start->copy()->addDays($days))
-                ->selectRaw('DATE(launch_date) as day, COUNT(*) as n')->groupBy('day')->pluck('n', 'day')
-            : collect();
-
         $options = [];
         for ($i = 0; $i <= $days; $i++) {
-            $date = $start->copy()->addDays($i);
-            $key = $date->toDateString();
-            $left = $cap - (int) ($counts[$key] ?? 0);
-            if ($kind === 'featured') {
-                $left = min($left, config('rankedlaunch.paid_slots_per_day') - (int) ($paidCounts[$key] ?? 0));
-            }
+            $date = today()->addDays($i);
+            $row = $rows[$date->toDateString()] ?? null;
             $options[] = [
                 'date' => $date,
-                'left' => max(0, $left),
-                'current' => (bool) $product->launch_date?->isSameDay($date),
+                'left' => $this->leftFor($plan, $row),
+                'current' => (bool) $exclude?->launch_date?->isSameDay($date),
             ];
         }
 
         return $options;
     }
 
-    public function canReschedule(Product $product, Carbon $date): bool
+    public function available(Carbon $date, string $plan, ?Product $exclude = null): bool
     {
-        $option = collect($this->rescheduleOptions($product))->first(fn ($o) => $o['date']->isSameDay($date));
+        if ($date->lt(today()) || $date->gt(today()->addDays(config('rankedlaunch.max_days_ahead', 90)))) {
+            return false;
+        }
 
-        return $option && ($option['left'] > 0 || $option['current']);
+        $option = collect($this->dateOptions($plan, $exclude, (int) today()->diffInDays($date)))->last();
+
+        return $option['left'] > 0;
     }
 
-    /** @param 'free'|'paid'|'featured' $kind */
-    private function countOn(Carbon $date, string $kind): int
+    /** Dates a booked (not yet live) product can move to. */
+    public function rescheduleOptions(Product $product): array
     {
-        return Product::whereIn('status', self::HOLDING)
-            ->whereDate('launch_date', $date)
-            ->when($kind === 'free', fn ($q) => $q->where('plan', 'free'))
-            ->when($kind === 'paid', fn ($q) => $q->where('plan', '!=', 'free'))
-            ->when($kind === 'featured', fn ($q) => $q->where('plan', 'featured'))
-            ->count();
+        return $this->dateOptions($product->plan, $product);
+    }
+
+    public function canReschedule(Product $product, Carbon $date): bool
+    {
+        return $product->launch_date?->isSameDay($date) || $this->available($date, $product->plan, $product);
+    }
+
+    /** Paid spots per day for the next $days days (used by admin insights). */
+    public function paidDates(int $days = 14): array
+    {
+        return array_slice($this->dateOptions('pro', null, $days), 1);
+    }
+
+    private function leftFor(string $plan, $row): int
+    {
+        $free = (int) ($row->free ?? 0);
+        $paid = (int) ($row->paid ?? 0);
+        $pro = (int) ($row->pro ?? 0);
+
+        $left = match ($plan) {
+            'free' => config('rankedlaunch.free_slots_per_day') - $free,
+            'featured' => min(
+                config('rankedlaunch.featured_slots_per_day') - $pro,
+                config('rankedlaunch.paid_slots_per_day') - $paid,
+            ),
+            default => config('rankedlaunch.paid_slots_per_day') - $paid,
+        };
+
+        return max(0, $left);
     }
 }

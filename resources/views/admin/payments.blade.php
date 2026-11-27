@@ -32,7 +32,7 @@
                             @if ($pay->status === 'paid')
                                 <form method="POST" action="{{ route('admin.payments.refund', $pay) }}" class="flex flex-col items-end gap-1.5">
                                     @csrf
-                                    <label class="flex items-center gap-1.5 text-xs text-ink-2 whitespace-nowrap"><input type="checkbox" name="downgrade" value="1" checked class="accent-[var(--ink)]"> Move to free queue</label>
+                                    <label class="flex items-center gap-1.5 text-xs text-ink-2 whitespace-nowrap"><input type="checkbox" name="downgrade" value="1" checked class="accent-[var(--ink)]"> Switch to Free plan</label>
                                     <button class="btn btn-outline btn-sm">Mark refunded</button>
                                 </form>
                             @endif
