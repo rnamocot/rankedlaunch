@@ -6,7 +6,7 @@
 
 - Makers submit a product (name, website, tagline, description, logo, category). New and established products are both welcome.
 - Every listing is reviewed by a person before it goes live.
-- Makers list an already-live product today, or schedule a launch on any open day, free on every plan. The one-time Pro plan adds a dofollow backlink and features the launch on the homepage, at the top of its category and first in Discover for 7 days.
+- Makers list an already-live product today, or schedule a launch on any open day, free on every plan.@if ($paymentsAvailable) The one-time Pro plan adds a dofollow backlink and features the launch on the homepage, at the top of its category and first in Discover for 7 days.@else Listing is currently free (early access).@endif
 - Rankings are by upvotes only; paid plans never change rank. Pro launches are labelled "Featured" and shown in a rotating homepage section.
 - Products are ranked by upvotes against everything launching the same day and the same week. The top 3 get a "Product of the Day" or "Product of the Week" badge.
 - Pricing is a one-time payment per launch. No subscription.

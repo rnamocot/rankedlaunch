@@ -179,7 +179,7 @@
     {{-- Maker CTA --}}
     <section class="mx-auto mt-24 max-w-3xl px-4 text-center sm:px-6" data-reveal>
         <h2 class="section-title">Built something?<br><span class="text-ink-3">Put it on the board.</span></h2>
-        <p class="mx-auto mt-4 max-w-md text-ink-2">List it today or pick your launch day, free. A {{ config('rankedlaunch.plans.pro.name') }} adds a dofollow backlink for {{ \App\Services\Pricing::dollars($pricing->priceFor('pro')) }}, one-time.</p>
+        <p class="mx-auto mt-4 max-w-md text-ink-2">List it today or pick your launch day, free.@if ($paymentsAvailable) A {{ config('rankedlaunch.plans.pro.name') }} adds a dofollow backlink for {{ \App\Services\Pricing::dollars($pricing->priceFor('pro')) }}, one-time.@else Votes, stats and badges included while we’re in early access.@endif</p>
         <div class="mt-8 flex flex-wrap justify-center gap-2.5">
             <a href="{{ route('submit') }}" class="btn btn-primary btn-lg">Launch your product</a>
             <a href="{{ route('launch') }}" class="btn btn-outline btn-lg">Why launch here</a>

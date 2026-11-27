@@ -24,7 +24,11 @@ class PaymentsOffTest extends TestCase
 
     public function test_pro_is_coming_soon_and_offer_banners_hide(): void
     {
-        $this->get('/pricing')->assertOk()->assertSee('Coming soon')->assertDontSee('promo-marquee', false);
+        $this->get('/pricing')->assertOk()
+            ->assertSee('Free while we’re in early access.', false)
+            ->assertDontSee('Choose Pro')->assertDontSee('Coming soon')->assertDontSee('dofollow backlink')
+            ->assertDontSee('promo-marquee', false);
+        $this->get('/launch')->assertOk()->assertSee('Everything is free right now')->assertDontSee('Free or paid?');
         $this->get('/')->assertOk()->assertDontSee('promo-marquee', false);
     }
 
@@ -37,7 +41,9 @@ class PaymentsOffTest extends TestCase
             'tagline' => 't', 'description' => str_repeat('x', 50), 'status' => 'draft',
         ]);
 
-        $this->actingAs($user)->get('/submit/acme/launch')->assertOk()->assertSee('Coming soon');
+        $this->actingAs($user)->get('/submit/acme/launch')->assertOk()
+            ->assertSee('Free while RankedLaunch is in early access')
+            ->assertDontSee('value="pro"', false);
         $this->actingAs($user)->post('/submit/acme/launch', ['plan' => 'pro', 'when' => 'now'])->assertSessionHasErrors('plan');
         $this->actingAs($user)->post('/submit/acme/launch', ['plan' => 'free', 'when' => 'now'])->assertSessionHasNoErrors();
         $this->assertSame('free', $p->fresh()->plan);

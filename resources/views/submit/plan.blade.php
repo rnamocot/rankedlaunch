@@ -69,6 +69,7 @@
                 @error('launch_date')<p class="field-error">{{ $message }}</p>@enderror
             </section>
 
+            @if ($paymentsAvailable)
             {{-- 2. Plan --}}
             <section>
                 <h2 class="group-header">Plan</h2>
@@ -99,6 +100,11 @@
                 </div>
                 @error('plan')<p class="field-error">{{ $message }}</p>@enderror
             </section>
+            @else
+                {{-- Free early access: every listing is free, nothing to choose --}}
+                <input type="hidden" name="plan" value="free">
+                <p class="card flex items-center gap-3 px-4 py-3 text-sm text-ink-2"><x-icon name="check" :size="17" :stroke="2" class="text-ink" /> Free while RankedLaunch is in early access: votes, stats, share kit and badges included.</p>
+            @endif
 
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <p class="text-xs text-ink-2">

@@ -83,6 +83,7 @@
         </ol></div>
     </section>
 
+    @if ($paymentsAvailable)
     {{-- Free vs Pro --}}
     <section class="mx-auto mt-24 max-w-3xl px-4 sm:px-6">
         <h2 class="section-title" data-reveal>Free or paid?</h2>
@@ -119,6 +120,17 @@
             @endforeach
         </div></div>
     </section>
+    @else
+        <section class="mx-auto mt-24 max-w-3xl px-4 sm:px-6">
+            <h2 class="section-title" data-reveal>Everything is free right now</h2>
+            <p class="mx-auto mt-2 max-w-md text-center text-ink-2">RankedLaunch is in early access. Every launch gets the full kit, no card needed.</p>
+            <div class="tray mt-10" data-reveal><ul class="card overflow-hidden text-sm">
+                @foreach (['List today or pick any launch day', 'Ranked on the daily and weekly boards', 'A permanent page that search engines can index', 'Launch stats: votes, page views, visits to your site', 'Share kit, share image and launch-day checklist', 'Launch and winner badges for your site'] as $item)
+                    <li class="list-row flex items-center gap-3 px-5 py-3" style="--inset: 3.25rem"><x-icon name="check" :size="17" :stroke="2.25" /> <span class="font-medium">{{ $item }}</span></li>
+                @endforeach
+            </ul></div>
+        </section>
+    @endif
 
     @if ($showStats)
         <section class="mx-auto mt-24 max-w-4xl px-4 sm:px-6">
