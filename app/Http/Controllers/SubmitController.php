@@ -94,6 +94,10 @@ class SubmitController extends Controller
             'launch_date' => ['required_if:when,date', 'nullable', 'date'],
         ]);
 
+        if ($data['plan'] !== 'free' && ! $payments->available()) {
+            return back()->withInput()->withErrors(['plan' => 'Pro is coming soon. You can list for free right now.']);
+        }
+
         // "List it now" = today's board. Otherwise the date they picked. Free for every plan.
         $when = $data['when'] ?? (filled($data['launch_date'] ?? null) ? 'date' : 'now');
         $date = $when === 'now' ? today() : Carbon::parse($data['launch_date'])->startOfDay();

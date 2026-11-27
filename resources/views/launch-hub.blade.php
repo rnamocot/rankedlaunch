@@ -129,7 +129,7 @@
             @endif
 
             {{-- Upgrade: backlink and visibility (dates are free on every plan) --}}
-            @if ($isFree && in_array($status, ['pending', 'approved']) && ! $dayOver)
+            @if ($paymentsAvailable && $isFree && in_array($status, ['pending', 'approved']) && ! $dayOver)
                 <section class="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
                     <div class="flex-1">
                         <p class="font-semibold">Make this launch help your SEO</p>

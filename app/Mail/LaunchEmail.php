@@ -139,7 +139,7 @@ class LaunchEmail extends Mailable
 
     private function upsellLine(): ?string
     {
-        if ($this->product->plan !== 'free') {
+        if ($this->product->plan !== 'free' || ! app(\App\Services\Payments::class)->available()) {
             return null;
         }
 

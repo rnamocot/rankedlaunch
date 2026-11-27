@@ -75,8 +75,12 @@
                 <x-promo-banner :pricing="$pricing" class="mb-3" />
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     @foreach ($plans as $key => $plan)
-                        <label class="group card relative flex cursor-pointer flex-col p-5 has-[:checked]:!outline-2 has-[:checked]:!outline-ink">
-                            <input type="radio" name="plan" value="{{ $key }}" class="peer sr-only" @checked($selectedPlan === $key)>
+                        @php($soon = $key !== 'free' && ! $paymentsAvailable)
+                        <label class="group card relative flex flex-col p-5 has-[:checked]:!outline-2 has-[:checked]:!outline-ink {{ $soon ? 'cursor-not-allowed opacity-60' : 'cursor-pointer' }}">
+                            <input type="radio" name="plan" value="{{ $key }}" class="peer sr-only" @checked($selectedPlan === $key && ! $soon) @disabled($soon)>
+                            @if ($soon)
+                                <span class="absolute top-4 right-4 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-2">Coming soon</span>
+                            @endif
                             <span class="flex items-center justify-between">
                                 <span class="text-sm font-semibold">{{ $plan['name'] }}</span>
                                 <span class="grid size-5 place-items-center rounded-full ring-[1.5px] ring-ink-3 group-has-[:checked]:bg-ink group-has-[:checked]:ring-ink">

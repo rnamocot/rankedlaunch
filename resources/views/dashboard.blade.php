@@ -150,7 +150,7 @@
                                                 <div class="flex justify-end gap-1.5">
                                                     @if (in_array($product->status, ['draft', 'awaiting_payment']))
                                                         <a href="{{ route('submit.plan', $product) }}" class="btn btn-primary btn-sm">Finish</a>
-                                                    @elseif (in_array($product->status, ['pending', 'approved']) && $product->plan === 'free' && ! $live)
+                                                    @elseif ($paymentsAvailable && in_array($product->status, ['pending', 'approved']) && $product->plan === 'free' && ! $live)
                                                         <a href="{{ route('submit.plan', $product) }}" class="btn btn-secondary btn-sm">Upgrade</a>
                                                     @endif
                                                     @if ($canMove)

@@ -22,7 +22,9 @@ class Pricing
     {
         $promo = $this->promo();
 
-        return $promo['enabled'] && $this->promoRemaining() > 0;
+        return $promo['enabled']
+            && app(Payments::class)->available()
+            && $this->promoRemaining() > 0;
     }
 
     public function promoRemaining(): int

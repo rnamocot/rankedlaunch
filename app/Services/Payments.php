@@ -11,4 +11,10 @@ class Payments
     {
         return config('rankedlaunch.payment_provider') === 'lemonsqueezy' ? $this->lemon : $this->polar;
     }
+
+    /** Can people buy Pro right now? Locally and in tests checkout is simulated, so always yes. */
+    public function available(): bool
+    {
+        return $this->gateway()->configured() || app()->environment('local', 'testing');
+    }
 }

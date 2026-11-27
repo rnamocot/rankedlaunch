@@ -44,9 +44,14 @@
                         <li class="flex gap-2.5"><x-icon name="check" :size="17" :stroke="2" class="mt-px" /> {{ $feature }}</li>
                     @endforeach
                 </ul>
-                <a href="{{ route('submit') }}" class="btn {{ $highlight ? 'btn-primary' : 'btn-secondary' }} mt-8 w-full">
-                    {{ $key === 'free' ? 'Start free' : 'Choose '.$plan['name'] }}
-                </a>
+                @if ($key !== 'free' && ! $paymentsAvailable)
+                    <span class="btn btn-secondary mt-8 w-full cursor-not-allowed opacity-60" aria-disabled="true">Coming soon</span>
+                    <p class="mt-2 text-center text-xs text-ink-2">Pro is opening soon. Listing is free in the meantime.</p>
+                @else
+                    <a href="{{ route('submit') }}" class="btn {{ $highlight ? 'btn-primary' : 'btn-secondary' }} mt-8 w-full">
+                        {{ $key === 'free' ? 'Start free' : 'Choose '.$plan['name'] }}
+                    </a>
+                @endif
             </section>
         @endforeach
     </div>
