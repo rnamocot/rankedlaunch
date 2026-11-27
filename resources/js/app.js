@@ -259,44 +259,58 @@ document.addEventListener('keydown', (event) => {
     else window.location.href = '/discover';
 });
 
-// Homepage banner with real data: poll today's top 4 and animate rank changes.
+// Homepage banner with real data: poll today's top 4, animate rank changes,
+// pop "+1" on new votes, and cycle the latest-upvote ticker.
 document.querySelectorAll('[data-rank-live]').forEach((board) => {
-    const ROW = Number(board.dataset.rowRem || 3.5);
+    const ROW = Number(board.dataset.rowRem || 3.75);
     const src = board.dataset.src;
     const rowsEl = board.querySelector('[data-rows]');
-    let timer;
+    const ticker = board.querySelector('[data-ticker]');
+    let latest = JSON.parse(ticker?.dataset.latest || '[]');
+    let tickIndex = 0;
+    let pollTimer;
+    let tickerTimer;
 
     const rows = () => [...rowsEl.querySelectorAll('[data-row]')];
 
-    const tick = (el, value) => {
+    const bump = (el, value) => {
         const count = el.querySelector('[data-count]');
-        if (count.textContent === String(value)) return;
+        const before = Number(count.textContent);
+        if (before === value) return;
         count.textContent = value;
         count.classList.remove('is-ticking');
         void count.offsetWidth;
         count.classList.add('is-ticking');
+        if (value > before) {
+            const plus = document.createElement('span');
+            plus.className = 'vote-plus';
+            plus.textContent = `+${value - before}`;
+            count.parentElement.appendChild(plus);
+            setTimeout(() => plus.remove(), 1400);
+        }
     };
 
     const apply = (top) => {
         const current = rows();
         const known = new Map(current.map((el) => [Number(el.dataset.row), el]));
-        const incomingIds = new Set(top.map((p) => p.id));
-        // Rows whose product dropped out of the top 4 get reused for newcomers.
-        const spare = current.filter((el) => !incomingIds.has(Number(el.dataset.row)));
+        const incoming = new Set(top.map((p) => p.id));
+        const spare = current.filter((el) => !incoming.has(Number(el.dataset.row)));
 
         top.forEach((p, i) => {
             let el = known.get(p.id);
             if (!el) {
                 el = spare.shift();
-                if (!el) return; // board shows a fixed number of rows
+                if (!el) return;
                 el.dataset.row = p.id;
                 el.href = p.url;
                 el.querySelector('[data-name]').textContent = p.name;
                 el.querySelector('[data-tagline]').textContent = p.tagline;
                 el.querySelector('[data-logo]').src = p.logo;
+                el.querySelector('[data-category]').textContent = p.category || '';
+                el.querySelector('[data-sep]').classList.toggle('hidden', !p.category);
+                el.querySelector('[data-count]').textContent = p.votes;
             }
-            el.dataset.votes = p.votes;
-            tick(el, p.votes);
+            bump(el, p.votes);
             el.style.transform = `translateY(${i * ROW}rem)`;
             const rank = el.querySelector('[data-rank]');
             rank.textContent = i + 1;
@@ -305,26 +319,56 @@ document.querySelectorAll('[data-rank-live]').forEach((board) => {
         });
     };
 
+    const showTicker = () => {
+        if (!ticker || !latest.length) return;
+        ticker.classList.remove('invisible');
+        const item = ticker.querySelector('[data-ticker-item]');
+        const ago = ticker.querySelector('[data-ticker-ago]');
+        const next = latest[tickIndex % latest.length];
+        item.style.opacity = 0;
+        item.style.transform = 'translateY(6px)';
+        ago.style.opacity = 0;
+        setTimeout(() => {
+            item.textContent = next.name;
+            item.href = next.url;
+            ago.textContent = `· ${next.ago}`;
+            item.style.opacity = 1;
+            item.style.transform = 'none';
+            ago.style.opacity = 1;
+        }, 250);
+        tickIndex++;
+    };
+
     const poll = async () => {
         if (document.hidden) return;
         try {
             const response = await fetch(src, { headers: { Accept: 'application/json' } });
-            if (response.ok) apply((await response.json()).top || []);
+            if (!response.ok) return;
+            const data = await response.json();
+            apply(data.top || []);
+            if (Array.isArray(data.latest) && data.latest.length) {
+                const changed = JSON.stringify(data.latest[0]) !== JSON.stringify(latest[0]);
+                latest = data.latest;
+                if (changed) { tickIndex = 0; showTicker(); }
+            }
         } catch {
             /* offline: keep what's shown */
         }
     };
 
-    // Only poll while the banner is on screen.
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Only poll and animate while the banner is on screen.
     new IntersectionObserver(([entry]) => {
-        clearInterval(timer);
-        if (entry.isIntersecting) {
-            poll();
-            timer = setInterval(poll, 20000);
-        }
+        clearInterval(pollTimer);
+        clearInterval(tickerTimer);
+        if (!entry.isIntersecting) return;
+        poll();
+        pollTimer = setInterval(poll, 20000);
+        if (!reduce && latest.length > 1) tickerTimer = setInterval(showTicker, 4500);
     }).observe(board);
 
-    // Your own vote shows up right away, without waiting for the next poll.
+    // Your own vote shows up right away.
     document.addEventListener('click', (event) => {
         if (event.target.closest('[data-vote]')) setTimeout(poll, 600);
     });

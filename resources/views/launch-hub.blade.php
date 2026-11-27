@@ -79,6 +79,9 @@
             </div>
             <div class="flex gap-2">
                 <a href="{{ $publicUrl }}" class="btn btn-outline btn-sm">{{ $live ? 'Public page' : 'Preview' }} <x-icon name="arrow-up-right" :size="14" :stroke="2" /></a>
+                @if ($canReschedule)
+                    <a href="{{ route('launch.date', $product) }}" class="btn btn-secondary btn-sm"><x-icon name="calendar" :size="15" /> Change date</a>
+                @endif
                 @unless ($live)
                     <a href="{{ route('submit.edit', $product) }}" class="btn btn-secondary btn-sm">Edit</a>
                 @endunless
@@ -96,6 +99,9 @@
                         {{ $daysUntilLaunch }} {{ Str::plural('day', $daysUntilLaunch) }}
                     </p>
                     <p class="mt-1 text-sm text-ink-2">{{ $launchDay->format('l, F j') }} · 00:00 UTC</p>
+                    @if ($canReschedule)
+                        <a href="{{ route('launch.date', $product) }}" class="mt-3 inline-block text-sm font-medium text-ink underline underline-offset-4">Change launch date</a>
+                    @endif
                 </section>
             @endif
 
