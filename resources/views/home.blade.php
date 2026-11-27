@@ -13,7 +13,7 @@
 
     {{-- Hero: pitch on the left, live rankings dashboard on the right --}}
     <div class="relative isolate">
-        <x-hero-backdrop :spotlight="$spotlight" />
+        <x-hero-backdrop :spotlight="$spotlight" :logos="$today->take(6)" />
         <section class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pt-16 pb-14 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
             <div class="intro text-center lg:text-left">
                 <p class="text-sm font-medium text-ink-2">The daily launch board for indie makers</p>

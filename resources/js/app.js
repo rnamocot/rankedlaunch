@@ -392,11 +392,6 @@ document.querySelectorAll('[data-rank-live]').forEach((board) => {
     });
 });
 
-// Hero graph: the travelling dot is SVG (SMIL) animation, which ignores the
-// reduced-motion setting, so remove it for people who asked for less motion.
-if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    document.querySelectorAll('[data-motion]').forEach((el) => el.remove());
-}
 
 
 // Global chat: anonymous, polls every 4s while open. Text only (no HTML).
@@ -632,4 +627,215 @@ document.querySelectorAll('[data-flip-clock]').forEach((clock) => {
 
     tick();
     setInterval(tick, 1000);
+});
+
+// Hero particle network: drifting dots that link when close, a few orange accents,
+// real app logos as larger floating nodes (the spotlight one wears a ribbon), and dots
+// that reach toward the cursor. Pauses off-screen and in background tabs; a still
+// frame for reduced-motion users.
+document.querySelectorAll('canvas[data-particles]').forEach((canvas) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const LINK = 125;
+    const LOGO_LINK = 170;
+    const LOGO = 36;
+    let w = 0;
+    let h = 0;
+    let dots = [];
+    let logos = [];
+    let ink = '23, 23, 23';
+    let accent = '249, 115, 22';
+    let surface = '#ffffff';
+    let mouse = null;
+    let running = false;
+    let visible = true;
+    let frame;
+
+    const color = (cssVar) => {
+        const probe = document.createElement('span');
+        probe.style.color = `var(${cssVar})`;
+        document.body.appendChild(probe);
+        const rgb = getComputedStyle(probe).color.match(/\d+/g);
+        probe.remove();
+        return rgb ? rgb.slice(0, 3).join(', ') : null;
+    };
+
+    const readTheme = () => {
+        ink = color('--ink') || ink;
+        accent = color('--accent') || accent;
+        const s = color('--surface');
+        if (s) surface = `rgb(${s})`;
+    };
+
+    const nodes = JSON.parse(canvas.dataset.nodes || '[]').map((n) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = n.logo;
+        return { ...n, img };
+    });
+
+    const rand = (min, max) => min + Math.random() * (max - min);
+
+    const resize = () => {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        w = canvas.clientWidth;
+        h = canvas.clientHeight;
+        canvas.width = Math.round(w * ratio);
+        canvas.height = Math.round(h * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+        const count = Math.max(22, Math.min(85, Math.round((w * h) / 12500)));
+        dots = Array.from({ length: count }, (_, i) => ({
+            x: rand(0, w), y: rand(0, h),
+            vx: rand(-0.25, 0.25), vy: rand(-0.25, 0.25),
+            r: rand(0.9, 2),
+            accent: i % 9 === 0, // roughly 1 in 9 dots is orange
+        }));
+
+        // Logo nodes spread across the field, drifting slower than the dots.
+        logos = nodes.map((n, i) => ({
+            ...n,
+            x: (w / (nodes.length + 1)) * (i + 1) + rand(-40, 40),
+            y: rand(h * 0.2, h * 0.85),
+            vx: rand(-0.12, 0.12) || 0.08,
+            vy: rand(-0.1, 0.1) || 0.06,
+        }));
+    };
+
+    const roundRect = (x, y, width, height, r) => {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + width, y, x + width, y + height, r);
+        ctx.arcTo(x + width, y + height, x, y + height, r);
+        ctx.arcTo(x, y + height, x, y, r);
+        ctx.arcTo(x, y, x + width, y, r);
+        ctx.closePath();
+    };
+
+    const line = (a, b, max, alpha, rgb = ink) => {
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d >= max) return;
+        ctx.strokeStyle = `rgba(${rgb}, ${alpha * (1 - d / max)})`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+    };
+
+    const draw = () => {
+        ctx.clearRect(0, 0, w, h);
+
+        for (let i = 0; i < dots.length; i++) {
+            for (let j = i + 1; j < dots.length; j++) line(dots[i], dots[j], LINK, 0.12);
+            if (mouse) line(dots[i], mouse, 160, 0.28, accent);
+        }
+
+        // Apps are the hubs: their links are a bit stronger.
+        for (const l of logos) for (const d of dots) line(l, d, LOGO_LINK, 0.16);
+
+        for (const d of dots) {
+            ctx.fillStyle = d.accent ? `rgba(${accent}, 0.85)` : `rgba(${ink}, 0.32)`;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.accent ? d.r + 0.6 : d.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        for (const l of logos) {
+            const x = l.x - LOGO / 2;
+            const y = l.y - LOGO / 2;
+
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.18)';
+            ctx.shadowBlur = 14;
+            ctx.shadowOffsetY = 4;
+            roundRect(x - 3, y - 3, LOGO + 6, LOGO + 6, 11);
+            ctx.fillStyle = surface;
+            ctx.fill();
+            ctx.restore();
+            roundRect(x - 3, y - 3, LOGO + 6, LOGO + 6, 11);
+            ctx.strokeStyle = l.accent ? `rgba(${accent}, 0.9)` : `rgba(${ink}, 0.12)`;
+            ctx.lineWidth = l.accent ? 1.5 : 1;
+            ctx.stroke();
+
+            if (l.img.complete && l.img.naturalWidth) {
+                ctx.save();
+                roundRect(x, y, LOGO, LOGO, 8);
+                ctx.clip();
+                ctx.drawImage(l.img, x, y, LOGO, LOGO);
+                ctx.restore();
+            }
+
+            if (l.label) {
+                ctx.font = '700 10px ui-sans-serif, system-ui, sans-serif';
+                const tw = ctx.measureText(l.label).width + 16;
+                const ty = y - 30;
+                roundRect(l.x - tw / 2, ty, tw, 19, 9.5);
+                ctx.fillStyle = l.accent ? `rgb(${accent})` : `rgb(${ink})`;
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(l.label, l.x, ty + 10);
+            }
+        }
+    };
+
+    const step = () => {
+        for (const d of dots) {
+            d.x += d.vx;
+            d.y += d.vy;
+            if (d.x < -10) d.x = w + 10;
+            if (d.x > w + 10) d.x = -10;
+            if (d.y < -10) d.y = h + 10;
+            if (d.y > h + 10) d.y = -10;
+        }
+        // Logos bounce softly inside the field so they stay visible.
+        for (const l of logos) {
+            l.x += l.vx;
+            l.y += l.vy;
+            if (l.x < 40 || l.x > w - 40) l.vx *= -1;
+            if (l.y < 60 || l.y > h - 40) l.vy *= -1;
+        }
+        draw();
+        frame = requestAnimationFrame(step);
+    };
+
+    const start = () => {
+        if (running || reduce || !visible || document.hidden) return;
+        running = true;
+        frame = requestAnimationFrame(step);
+    };
+    const stop = () => {
+        running = false;
+        cancelAnimationFrame(frame);
+    };
+
+    readTheme();
+    resize();
+    draw();
+    nodes.forEach((n) => n.img.addEventListener('load', () => { if (!running) draw(); }, { once: true }));
+
+    new IntersectionObserver(([entry]) => {
+        visible = entry.isIntersecting;
+        if (visible) start(); else stop();
+    }).observe(canvas);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else start(); });
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readTheme(); draw(); });
+
+    // The canvas sits behind the content, so track the pointer at window level.
+    window.addEventListener('pointermove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        mouse = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height ? { x, y } : null;
+    }, { passive: true });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => { resize(); draw(); }, 150);
+    });
 });

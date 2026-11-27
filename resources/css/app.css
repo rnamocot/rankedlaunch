@@ -592,47 +592,11 @@
 }
 
 /* ------------------------------------------------------------------
-   Homepage hero backdrop: one ranking graph
+   Homepage hero backdrop: particle network canvas, fading toward the edges
 ------------------------------------------------------------------- */
-.hero-line {
-    opacity: 0.2;
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: trend-draw 2.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards;
-}
-
-.hero-area {
-    opacity: 0;
-    animation: fade-in 1.2s ease-out 1.6s forwards;
-}
-
-.hero-runner {
-    opacity: 0;
-    animation: fade-in 0.6s ease-out 2.6s forwards;
-}
-
-.hero-end {
-    opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: end-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) 2.6s forwards;
-}
-
-@keyframes trend-draw { to { stroke-dashoffset: 0; } }
-@keyframes fade-in { to { opacity: 1; } }
-@keyframes end-in {
-    from { opacity: 0; transform: scale(0.4); }
-    to { opacity: 0.3; transform: scale(1); }
-}
-
-@media (prefers-color-scheme: dark) {
-    .hero-line { opacity: 0.3; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .hero-line { animation: none; stroke-dashoffset: 0; }
-    .hero-area, .hero-end { animation: none; opacity: 1; }
-    .hero-runner { display: none; }
+.hero-particles {
+    mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 40%, transparent 90%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 75% at 50% 45%, #000 40%, transparent 90%);
 }
 
 /* "+1" that floats up from a vote count in the live banner */
