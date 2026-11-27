@@ -1,5 +1,5 @@
 {{--
-    Maker lounge: anonymous global chat. Floating button → side panel (desktop) / sheet (phone).
+    Global chat: anonymous, open to every visitor (not support). Floating button → side panel (desktop) / sheet (phone).
     Polls /chat/messages every 4s while open. Messages are rendered as text (never HTML).
 --}}
 @php
@@ -11,19 +11,19 @@
             class="fixed right-4 bottom-4 z-50 flex h-12 items-center gap-2.5 rounded-full bg-ink pr-5 pl-4 text-sm font-semibold text-on-ink shadow-[0_10px_30px_-10px_rgba(0,0,0,0.45)] transition hover:opacity-90 sm:right-6 sm:bottom-6"
             aria-haspopup="dialog" aria-controls="chat-panel">
         <x-icon name="send" :size="17" />
-        <span>Chat</span>
+        <span>Global chat</span>
         <span class="flex items-center gap-1.5 text-xs font-medium opacity-75"><span class="size-1.5 rounded-full bg-[var(--accent)]"></span><span data-chat-online-count>{{ $online }}</span> online</span>
         <span data-chat-unread hidden class="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-[var(--accent)] text-[0.625rem] font-bold text-white"></span>
     </button>
 
     {{-- Panel --}}
-    <section id="chat-panel" role="dialog" aria-modal="false" aria-label="Maker lounge chat" hidden data-chat-panel
+    <section id="chat-panel" role="dialog" aria-modal="false" aria-label="Global chat" hidden data-chat-panel
              class="fixed inset-0 z-50 flex flex-col bg-surface sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[34rem] sm:w-[24rem] sm:rounded-2xl sm:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.35)] sm:outline sm:outline-1 sm:-outline-offset-1 sm:outline-line">
         <header class="flex items-center gap-3 border-b border-line px-4 py-3">
             <x-logo :size="26" :wordmark="false" class="text-ink" />
             <div class="min-w-0 flex-1">
-                <p class="text-sm font-semibold">Maker lounge</p>
-                <p class="flex items-center gap-1.5 text-xs text-ink-2"><span class="size-1.5 rounded-full bg-[var(--accent)]"></span><span data-chat-online>{{ $online }}</span> online · anonymous</p>
+                <p class="text-sm font-semibold">Global chat</p>
+                <p class="flex items-center gap-1.5 text-xs text-ink-2"><span class="size-1.5 rounded-full bg-[var(--accent)]"></span><span data-chat-online>{{ $online }}</span> online · anonymous · not support</p>
             </div>
             <button type="button" data-chat-close class="grid size-9 place-items-center rounded-full text-ink-2 hover:bg-fill hover:text-ink" aria-label="Close chat">
                 <x-icon name="close" :size="18" />

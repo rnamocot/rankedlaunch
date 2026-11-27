@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
 
 /**
- * Anonymous global chat ("Maker lounge").
+ * Anonymous global chat (open to every visitor, not support).
  * Identity is a random id + a display name kept in long-lived cookies; no account needed.
  * The browser polls for new messages every few seconds while the panel is open.
  */

@@ -157,4 +157,17 @@ class AdminTest extends TestCase
         $this->actingAs($this->admin)->delete("/admin/categories/{$c->id}")->assertRedirect();
         $this->assertModelMissing($c);
     }
+
+    public function test_stale_saved_settings_never_break_pages(): void
+    {
+        \Illuminate\Support\Facades\DB::table('settings')->insert([
+            ['key' => 'plans.featured.price', 'value' => '3900'],
+            ['key' => 'free_wait_days', 'value' => '3'],
+        ]);
+        \Illuminate\Support\Facades\Cache::forget('rankedlaunch.settings');
+        app(\App\Services\Settings::class)->apply();
+
+        $this->assertNull(config('rankedlaunch.plans.featured'));
+        $this->get('/pricing')->assertOk();
+    }
 }

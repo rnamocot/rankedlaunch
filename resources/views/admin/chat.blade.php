@@ -1,4 +1,4 @@
-<x-admin.shell title="Chat" :subtitle="$today.' messages today · '.$online.' online now · chat is '.(config('rankedlaunch.chat_enabled') ? 'on' : 'off').' (Settings)'">
+<x-admin.shell title="Global chat" :subtitle="$today.' messages today · '.$online.' online now · chat is '.(config('rankedlaunch.chat_enabled') ? 'on' : 'off').' (Settings)'">
     <div class="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <section>
             <h2 class="group-header">Messages</h2>

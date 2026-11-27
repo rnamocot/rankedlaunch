@@ -399,7 +399,7 @@ if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 }
 
 
-// Maker lounge chat: anonymous, polls every 4s while open. Text only (no HTML).
+// Global chat: anonymous, polls every 4s while open. Text only (no HTML).
 document.querySelectorAll('[data-chat]').forEach((root) => {
     const $ = (sel) => root.querySelector(sel);
     const panel = $('[data-chat-panel]');

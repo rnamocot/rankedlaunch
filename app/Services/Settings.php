@@ -28,7 +28,7 @@ class Settings
             'plans.pro.featured_days' => ['Days featured', 'int', 'How long Pro launches stay featured on the homepage, category and Discover.'],
         ],
         'Community' => [
-            'chat_enabled' => ['Maker lounge chat', 'bool', 'Anonymous global chat on public pages. Turn off any time.'],
+            'chat_enabled' => ['Global chat', 'bool', 'Anonymous global chat on public pages. Turn off any time.'],
         ],
         'Listings' => [
             'review_listings' => ['Review listings before they go live', 'bool', 'On: you approve each new listing. Off: listings go live instantly (you can still remove them).'],
@@ -45,8 +45,12 @@ class Settings
     /** Apply saved overrides on top of config/rankedlaunch.php. */
     public function apply(): void
     {
+        // Only keys that still exist: old saved values must never recreate removed config.
+        $allowed = array_flip(self::keys());
         foreach ($this->all() as $key => $value) {
-            config(["rankedlaunch.$key" => $value]);
+            if (isset($allowed[$key])) {
+                config(["rankedlaunch.$key" => $value]);
+            }
         }
     }
 

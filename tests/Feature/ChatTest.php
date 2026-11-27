@@ -92,10 +92,10 @@ class ChatTest extends TestCase
 
     public function test_widget_shows_on_public_pages_and_can_be_turned_off(): void
     {
-        $this->get('/')->assertSee('Maker lounge');
+        $this->get('/')->assertSee('Global chat');
 
         config(['rankedlaunch.chat_enabled' => false]);
-        $this->get('/')->assertDontSee('Maker lounge');
+        $this->get('/')->assertDontSee('Global chat');
         $this->getJson('/chat/messages')->assertNotFound();
     }
 

@@ -9,7 +9,7 @@
         <li><strong>Votes:</strong> which products you upvoted. The count is public; who voted is not.</li>
         <li><strong>Payments:</strong> handled by our payment partner. We only receive the order ID, amount and status, never your card details.</li>
         <li><strong>Newsletter:</strong> your email, if you subscribe.</li>
-        <li><strong>Chat:</strong> messages in the Maker lounge are public and anonymous. We store a random browser id and a one-way hash of your IP address (never the IP itself) only to stop spam and mute people who break the rules. Messages are deleted after 14 days.</li>
+        <li><strong>Global chat:</strong> messages are public and anonymous. We store a random browser id and a one-way hash of your IP address (never the IP itself) only to stop spam and mute people who break the rules. Messages are deleted after 14 days.</li>
         <li><strong>Usage:</strong> anonymous view and click counts for product pages. A session cookie keeps you signed in and stops us counting the same visit twice.</li>
     </ul>
 
