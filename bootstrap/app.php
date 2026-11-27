@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Hostinger serves the site through its own front proxy; trust it so HTTPS is detected.
+        $middleware->trustProxies(at: '*');
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->web(append: [\App\Http\Middleware\EnsureNotBanned::class]);
         $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);

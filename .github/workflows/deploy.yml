@@ -1,0 +1,58 @@
+# On every push to main: run the test suite, and only if it passes,
+# SSH into Hostinger and run deploy.sh (pull, composer, migrate, cache).
+#
+# Repository secrets needed (GitHub → Settings → Secrets and variables → Actions):
+#   SSH_HOST         Hostinger server IP or host (hPanel → Advanced → SSH Access)
+#   SSH_PORT         Usually 65002 on Hostinger
+#   SSH_USER         e.g. u123456789
+#   SSH_PRIVATE_KEY  Private half of the deploy key (public half added in hPanel → SSH Access)
+#   APP_PATH         e.g. /home/u123456789/domains/rankedlaunch.com/app
+
+name: Test and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: gd, intl, pdo_sqlite, mbstring, fileinfo
+          coverage: none
+
+      - name: Install PHP packages
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run tests
+        run: php artisan test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Hostinger
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd "${{ secrets.APP_PATH }}"
+            bash deploy.sh

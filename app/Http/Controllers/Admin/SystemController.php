@@ -26,7 +26,7 @@ class SystemController extends Controller
             // [label, ok?, detail, how to fix]
             ['Scheduled tasks (cron)', $lastRun && $hoursSince < 2,
                 $lastRun ? 'Last run '.now()->parse($lastRun)->diffForHumans() : 'Never run',
-                'In hPanel → Cron Jobs add: * * * * * php '.base_path('artisan').' schedule:run'],
+                'In hPanel → Cron Jobs add an hourly job (minute 0): php '.base_path('artisan').' launches:send-emails'],
             ['Email delivery', config('mail.default') !== 'log',
                 'Mailer: '.config('mail.default').', from '.config('mail.from.address'),
                 'Set MAIL_MAILER, MAIL_HOST, MAIL_USERNAME and MAIL_PASSWORD in .env (e.g. Resend or Hostinger SMTP).'],

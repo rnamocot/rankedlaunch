@@ -34,7 +34,7 @@ Built CSS/JS (`public/build`) is committed, because shared hosting can't run Nod
 - Point the domain at the app's `public` folder and set `APP_ENV=production` and `APP_DEBUG=false`.
 - First install: `composer install --no-dev`, `php artisan key:generate`, `php artisan migrate --force`, `php artisan db:seed --force` (categories only in production), `php artisan storage:link`.
 - Admin: sign up on the site, then run `php artisan rankedlaunch:make-admin you@example.com`.
-- Add a cron job: `* * * * * php /path/to/artisan schedule:run`.
+- Add an hourly cron job (minute 0): `php /path/to/artisan launches:send-emails`. On hosts where `proc_open` is allowed you can use `* * * * * php artisan schedule:run` instead; Hostinger shared hosting disables it.
 - Create the payment webhook: `https://rankedlaunch.com/webhooks/polar` for the `order.paid` event.
 - Updates after that: `git push`, then on the server run `bash deploy.sh`.
 - Admin dashboard: `/admin`. The System page shows anything that still needs setting up.

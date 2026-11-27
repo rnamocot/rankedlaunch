@@ -10,8 +10,11 @@ echo "→ Pulling latest code"
 git pull --ff-only origin main
 
 echo "→ Installing PHP packages"
+# --no-scripts: this host disables proc_open, which Composer needs to run artisan,
+# so package discovery runs directly afterwards instead.
 COMPOSER=$(command -v composer2 || command -v composer)
-$COMPOSER install --no-dev --optimize-autoloader --no-interaction
+$COMPOSER install --no-dev --optimize-autoloader --no-interaction --no-scripts
+php artisan package:discover
 
 echo "→ Updating database"
 php artisan migrate --force
@@ -22,7 +25,8 @@ php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-php artisan storage:link 2>/dev/null || true
+# PHP's symlink() is disabled on this host, so link uploads with ln instead.
+[ -e public/storage ] || ln -s ../storage/app/public public/storage
 
 echo "→ Maintenance mode off"
 php artisan up
