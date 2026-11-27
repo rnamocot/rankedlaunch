@@ -19,14 +19,13 @@ class Settings
     public const FIELDS = [
         'Launch offer' => [
             'promo.enabled' => ['Offer is on', 'bool', 'Turn the discounted launch offer on or off.'],
-            'promo.price' => ['Offer price (USD)', 'money', 'What the first buyers pay for a Listing.'],
+            'promo.price' => ['Offer price (USD)', 'money', 'What the first buyers pay for Pro.'],
             'promo.limit' => ['Number of offer spots', 'int', 'After this many paid sales, the price goes back to normal.'],
             'promo.label' => ['Offer name', 'string', 'Shown in the banner, e.g. “Launch offer”.'],
         ],
         'Prices' => [
-            'plans.pro.price' => ['Listing (USD)', 'money', 'Regular one-time price.'],
-            'plans.featured.price' => ['Pro (USD)', 'money', 'Regular one-time price.'],
-            'plans.featured.featured_days' => ['Pro pinned days', 'int', 'How long Pro launches stay pinned on the homepage.'],
+            'plans.pro.price' => ['Pro (USD)', 'money', 'Regular one-time price, after the launch offer.'],
+            'plans.pro.featured_days' => ['Days featured', 'int', 'How long Pro launches stay featured on the homepage, category and Discover.'],
         ],
         'Community' => [
             'chat_enabled' => ['Maker lounge chat', 'bool', 'Anonymous global chat on public pages. Turn off any time.'],
@@ -34,8 +33,7 @@ class Settings
         'Listings' => [
             'review_listings' => ['Review listings before they go live', 'bool', 'On: you approve each new listing. Off: listings go live instantly (you can still remove them).'],
             'free_slots_per_day' => ['Free launches per day', 'int', 'Cap on free launches each day, so the board doesn’t get flooded.'],
-            'paid_slots_per_day' => ['Paid launches per day', 'int', 'Cap on paid launches (Listing and Pro) each day.'],
-            'featured_slots_per_day' => ['Pro launches per day', 'int', 'Pro is part of the paid cap above. Keep it small so Featured spots stay valuable.'],
+            'paid_slots_per_day' => ['Pro launches per day', 'int', 'Every Pro launch is featured. Keep this small so features stay valuable.'],
         ],
     ];
 

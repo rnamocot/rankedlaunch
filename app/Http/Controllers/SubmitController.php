@@ -100,7 +100,7 @@ class SubmitController extends Controller
 
         if (! $scheduler->available($date, $data['plan'], $product)) {
             return back()->withInput()->withErrors(['launch_date' => match (true) {
-                $data['plan'] === 'featured' => 'Pro spots for that day are taken. Pick another day, or choose '.config('rankedlaunch.plans.pro.name').'.',
+                $data['plan'] === 'pro' => 'Pro spots for that day are taken. Pick another day.',
                 $date->isToday() => 'Today’s board is full. Pick a launch date instead.',
                 default => 'That day is full. Pick another one.',
             }]);

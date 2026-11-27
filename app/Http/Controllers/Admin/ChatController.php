@@ -16,7 +16,7 @@ class ChatController extends Controller
     {
         return view('admin.chat', [
             'messages' => ChatMessage::latest('id')->paginate(60),
-            'mutes' => DB::table('chat_mutes')->where('until', '>', now())->latest('id')->limit(30)->get(),
+            'mutes' => DB::table('chat_mutes')->where('until', '>', now())->latest('id')->limit(50)->get(),
             'today' => ChatMessage::where('created_at', '>=', today())->count(),
             'online' => app(\App\Http\Controllers\ChatController::class)->onlineCount(),
         ]);
@@ -37,6 +37,16 @@ class ChatController extends Controller
         ActivityLog::record('moderation', "Muted chat user “{$message->name}” for 7 days and removed {$removed} messages", user: $request->user());
 
         return back()->with('status', "“{$message->name}” muted for 7 days. {$removed} recent messages removed.");
+    }
+
+    /** Ban the author permanently (browser id + IP hash) and remove all their messages. */
+    public function ban(Request $request, ChatMessage $message, ChatModerator $moderator)
+    {
+        $moderator->ban($message->chat_id, $message->ip_hash);
+        $removed = ChatMessage::where('chat_id', $message->chat_id)->orWhere('ip_hash', $message->ip_hash)->delete();
+        ActivityLog::record('moderation', "Banned chat user “{$message->name}” and removed {$removed} messages", user: $request->user());
+
+        return back()->with('status', "“{$message->name}” banned from chat. {$removed} messages removed.");
     }
 
     public function unmute(int $mute)

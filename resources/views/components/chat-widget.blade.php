@@ -51,7 +51,7 @@
                 <button class="btn btn-secondary btn-sm">Save</button>
                 <button type="button" data-chat-rename-cancel class="btn btn-outline btn-sm">Cancel</button>
             </form>
-            <p class="mt-2 text-[0.6875rem] leading-relaxed text-ink-3">Be kind. Swearing, sexual talk, links and phone numbers are blocked, and repeat offenders get muted.</p>
+            <p class="mt-2 text-[0.6875rem] leading-relaxed text-ink-3">Be kind. Swearing, insults, sexual talk, links and phone numbers are blocked. Repeat offenders get muted or banned.</p>
         </div>
     </section>
 </div>

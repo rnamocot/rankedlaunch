@@ -104,12 +104,12 @@ class LaunchFlowTest extends TestCase
         config(['rankedlaunch.lemonsqueezy.webhook_secret' => 'secret']);
         $user = User::factory()->create();
         $product = $this->submitProduct($user);
-        $product->update(['requested_plan' => 'featured', 'requested_launch_date' => today()->addDays(2), 'status' => 'awaiting_payment']);
-        $payment = Payment::create(['user_id' => $user->id, 'product_id' => $product->id, 'provider' => 'lemonsqueezy', 'plan' => 'featured', 'amount' => 9900]);
+        $product->update(['requested_plan' => 'pro', 'requested_launch_date' => today()->addDays(2), 'status' => 'awaiting_payment']);
+        $payment = Payment::create(['user_id' => $user->id, 'product_id' => $product->id, 'provider' => 'lemonsqueezy', 'plan' => 'pro', 'amount' => 3900]);
 
         $body = json_encode([
             'meta' => ['event_name' => 'order_created', 'custom_data' => ['payment_id' => (string) $payment->id]],
-            'data' => ['id' => '555', 'attributes' => ['status' => 'paid', 'total' => 9900, 'currency' => 'USD']],
+            'data' => ['id' => '555', 'attributes' => ['status' => 'paid', 'total' => 3900, 'currency' => 'USD']],
         ]);
 
         $this->call('POST', '/webhooks/lemonsqueezy', [], [], [], ['HTTP_X-Signature' => 'bad', 'CONTENT_TYPE' => 'application/json'], $body)->assertStatus(401);
@@ -118,7 +118,7 @@ class LaunchFlowTest extends TestCase
         $this->call('POST', '/webhooks/lemonsqueezy', [], [], [], ['HTTP_X-Signature' => $sig, 'CONTENT_TYPE' => 'application/json'], $body)->assertOk();
 
         $product->refresh();
-        $this->assertSame('featured', $product->plan);
+        $this->assertSame('pro', $product->plan);
         $this->assertNotNull($product->featured_until);
         $this->assertSame('555', $payment->fresh()->provider_order_id);
     }

@@ -25,44 +25,44 @@ class FeaturedFairnessTest extends TestCase
         ]);
     }
 
-    public function test_pro_has_its_own_daily_cap_inside_the_paid_cap(): void
+    public function test_pro_has_a_daily_cap_and_free_is_separate(): void
     {
-        config(['rankedlaunch.featured_slots_per_day' => 2, 'rankedlaunch.paid_slots_per_day' => 10]);
+        config(['rankedlaunch.paid_slots_per_day' => 2, 'rankedlaunch.free_slots_per_day' => 10]);
         $date = today()->addDays(3);
-        $this->product(['plan' => 'featured', 'launch_date' => $date]);
-        $this->product(['plan' => 'featured', 'launch_date' => $date]);
+        $this->product(['plan' => 'pro', 'launch_date' => $date]);
+        $this->product(['plan' => 'pro', 'launch_date' => $date]);
 
         $scheduler = app(LaunchScheduler::class);
-        $this->assertFalse($scheduler->available($date, 'featured'));
-        $this->assertTrue($scheduler->available($date, 'pro'));
+        $this->assertFalse($scheduler->available($date, 'pro'));
+        $this->assertTrue($scheduler->available($date, 'free'));
 
         $pick = fn ($plan) => collect($scheduler->dateOptions($plan))->first(fn ($d) => $d['date']->isSameDay($date))['left'];
-        $this->assertSame([8, 0], [$pick('pro'), $pick('featured')]);
+        $this->assertSame([0, 10], [$pick('pro'), $pick('free')]);
     }
 
     public function test_booking_pro_on_a_full_pro_day_is_refused(): void
     {
         Mail::fake();
-        config(['rankedlaunch.featured_slots_per_day' => 1]);
+        config(['rankedlaunch.paid_slots_per_day' => 1]);
         $date = today()->addDays(4);
-        $this->product(['plan' => 'featured', 'launch_date' => $date]);
+        $this->product(['plan' => 'pro', 'launch_date' => $date]);
 
         $mine = $this->product(['status' => 'draft', 'launch_date' => null]);
         $this->actingAs($mine->user)
-            ->post("/submit/{$mine->slug}/launch", ['plan' => 'featured', 'launch_date' => $date->toDateString()])
+            ->post("/submit/{$mine->slug}/launch", ['plan' => 'pro', 'launch_date' => $date->toDateString()])
             ->assertSessionHasErrors('launch_date');
 
-        // Listing on the same day still works
+        // Free on the same day still works
         $this->actingAs($mine->user)
-            ->post("/submit/{$mine->slug}/launch", ['plan' => 'pro', 'launch_date' => $date->toDateString()])
+            ->post("/submit/{$mine->slug}/launch", ['plan' => 'free', 'launch_date' => $date->toDateString()])
             ->assertSessionHasNoErrors();
     }
 
     public function test_rotation_puts_launch_day_first_and_shares_views_evenly(): void
     {
-        $launchDay = $this->product(['plan' => 'featured', 'launch_date' => today(), 'featured_until' => now()->addDays(7)]);
+        $launchDay = $this->product(['plan' => 'pro', 'launch_date' => today(), 'featured_until' => now()->addDays(7)]);
         $others = collect(range(1, 5))->map(fn ($i) => $this->product([
-            'plan' => 'featured', 'launch_date' => today()->subDays($i), 'featured_until' => now()->addDays(7 - $i),
+            'plan' => 'pro', 'launch_date' => today()->subDays($i), 'featured_until' => now()->addDays(7 - $i),
         ]));
 
         $shown = [];
@@ -85,7 +85,7 @@ class FeaturedFairnessTest extends TestCase
     public function test_paying_never_changes_rank_and_pro_gets_a_label(): void
     {
         $free = $this->product(['plan' => 'free', 'votes_count' => 50, 'name' => 'FreeApp']);
-        $pro = $this->product(['plan' => 'featured', 'votes_count' => 10, 'name' => 'ProApp', 'featured_until' => now()->addDays(7)]);
+        $pro = $this->product(['plan' => 'pro', 'votes_count' => 10, 'name' => 'ProApp', 'featured_until' => now()->addDays(7)]);
 
         $this->assertSame(1, $free->dailyRank());
         $this->assertSame(2, $pro->dailyRank());

@@ -11,6 +11,7 @@
                         </div>
                         <div class="flex shrink-0 gap-2">
                             <form method="POST" action="{{ route('admin.chat.mute', $m) }}">@csrf<button class="btn btn-outline btn-sm">Mute 7d</button></form>
+                            <form method="POST" action="{{ route('admin.chat.ban', $m) }}">@csrf<button class="btn btn-outline btn-sm !text-danger">Ban</button></form>
                             <form method="POST" action="{{ route('admin.chat.destroy', $m) }}">@csrf @method('DELETE')<button class="btn btn-secondary btn-sm !text-danger">Delete</button></form>
                         </div>
                     </li>
@@ -23,15 +24,16 @@
 
         <aside class="space-y-8">
             <section>
-                <h2 class="group-header">Muted now</h2>
+                <h2 class="group-header">Muted and banned</h2>
                 <ul class="card overflow-hidden text-sm">
                     @forelse ($mutes as $mute)
                         <li class="list-row flex items-center justify-between gap-3 px-4 py-2.5">
                             <span class="min-w-0">
                                 <span class="block truncate">{{ $mute->reason }}</span>
-                                <span class="block text-xs text-ink-2">until {{ \Illuminate\Support\Carbon::parse($mute->until)->format('M j, H:i') }}</span>
+                                @php($until = \Illuminate\Support\Carbon::parse($mute->until))
+                                <span class="block text-xs {{ $until->gt(now()->addYears(50)) ? 'font-semibold text-danger' : 'text-ink-2' }}">{{ $until->gt(now()->addYears(50)) ? 'Banned' : 'Muted until '.$until->format('M j, H:i') }}</span>
                             </span>
-                            <form method="POST" action="{{ route('admin.chat.unmute', $mute->id) }}">@csrf<button class="btn btn-outline btn-sm">Unmute</button></form>
+                            <form method="POST" action="{{ route('admin.chat.unmute', $mute->id) }}">@csrf<button class="btn btn-outline btn-sm">Lift</button></form>
                         </li>
                     @empty
                         <li class="px-4 py-6 text-center text-ink-2">Nobody is muted.</li>
@@ -42,7 +44,7 @@
             <section>
                 <h2 class="group-header">Rules (automatic)</h2>
                 <div class="card p-4 text-sm text-ink-2">
-                    Swearing (English and Filipino), sexual talk, links and phone numbers are blocked. 3 blocked attempts in 10 minutes = 30 minutes muted. One message every 3 seconds, 280 characters max. Messages older than 14 days are removed.
+                    Blocked: swearing, sexual talk, insults and harassment, threats and hate terms (English and Filipino), links and phone numbers. Refused as spam: shouting in caps, repeated characters, the same message twice. 3 blocked attempts in 10 minutes = 30 minutes muted; muted again within 24 hours = 7 days. One message every 3 seconds, 280 characters max. Messages are removed after 14 days.
                 </div>
             </section>
 

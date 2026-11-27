@@ -34,28 +34,28 @@ class DatabaseSeeder extends Seeder
 
         // [name, domain, tagline, category, pricing, days ago (0 = today), plan]
         $demo = [
-            ['Raycast', 'raycast.com', 'A blazingly fast, extendable launcher for your Mac', 'Productivity', 'freemium', 0, 'featured'],
-            ['Linear', 'linear.app', 'Issue tracking built for high-performance teams', 'Developer Tools', 'freemium', 0, 'pro'],
-            ['Plausible', 'plausible.io', 'Simple, privacy-friendly website analytics', 'Analytics', 'paid', 0, 'pro'],
+            ['Raycast', 'raycast.com', 'A blazingly fast, extendable launcher for your Mac', 'Productivity', 'freemium', 0, 'pro'],
+            ['Linear', 'linear.app', 'Issue tracking built for high-performance teams', 'Developer Tools', 'freemium', 0, 'free'],
+            ['Plausible', 'plausible.io', 'Simple, privacy-friendly website analytics', 'Analytics', 'paid', 0, 'free'],
             ['Cal.com', 'cal.com', 'Open scheduling infrastructure for everyone', 'Productivity', 'freemium', 0, 'free'],
-            ['Resend', 'resend.com', 'Email API built for developers', 'Developer Tools', 'freemium', 0, 'pro'],
+            ['Resend', 'resend.com', 'Email API built for developers', 'Developer Tools', 'freemium', 0, 'free'],
             ['Framer', 'framer.com', 'Design and publish websites that look great', 'Design', 'freemium', 0, 'free'],
             ['Tally', 'tally.so', 'The simplest way to create forms, for free', 'No-Code', 'freemium', 0, 'free'],
-            ['Ahrefs', 'ahrefs.com', 'SEO tools to grow your search traffic', 'SEO', 'paid', 1, 'pro'],
-            ['Perplexity', 'perplexity.ai', 'An answer engine for curious minds', 'AI Tools', 'freemium', 1, 'featured'],
-            ['Supabase', 'supabase.com', 'The open source Postgres development platform', 'Developer Tools', 'freemium', 1, 'pro'],
+            ['Ahrefs', 'ahrefs.com', 'SEO tools to grow your search traffic', 'SEO', 'paid', 1, 'free'],
+            ['Perplexity', 'perplexity.ai', 'An answer engine for curious minds', 'AI Tools', 'freemium', 1, 'pro'],
+            ['Supabase', 'supabase.com', 'The open source Postgres development platform', 'Developer Tools', 'freemium', 1, 'free'],
             ['Beehiiv', 'beehiiv.com', 'The newsletter platform built for growth', 'Marketing', 'freemium', 1, 'free'],
-            ['Lemon Squeezy', 'lemonsqueezy.com', 'Payments, tax and subscriptions for software', 'Finance', 'paid', 1, 'pro'],
+            ['Lemon Squeezy', 'lemonsqueezy.com', 'Payments, tax and subscriptions for software', 'Finance', 'paid', 1, 'free'],
             ['Apollo', 'apollo.io', 'Find, contact and close your ideal buyers', 'Sales & Leads', 'freemium', 1, 'free'],
             ['Excalidraw', 'excalidraw.com', 'Virtual whiteboard for sketching hand-drawn diagrams', 'Design', 'free', 2, 'free'],
-            ['PostHog', 'posthog.com', 'Product analytics, session replay and feature flags', 'Analytics', 'freemium', 2, 'pro'],
-            ['Webflow', 'webflow.com', 'Build sites visually, with the power of code', 'No-Code', 'freemium', 3, 'pro'],
+            ['PostHog', 'posthog.com', 'Product analytics, session replay and feature flags', 'Analytics', 'freemium', 2, 'free'],
+            ['Webflow', 'webflow.com', 'Build sites visually, with the power of code', 'No-Code', 'freemium', 3, 'free'],
             ['Typefully', 'typefully.com', 'Write, schedule and grow on X and LinkedIn', 'Marketing', 'freemium', 3, 'free'],
-            ['Cursor', 'cursor.com', 'The AI code editor', 'AI Tools', 'freemium', 4, 'pro'],
-            ['Notion', 'notion.so', 'The connected workspace for docs, wikis and projects', 'Productivity', 'freemium', 9, 'pro'],
-            ['Figma', 'figma.com', 'Where teams design together', 'Design', 'freemium', 12, 'pro'],
+            ['Cursor', 'cursor.com', 'The AI code editor', 'AI Tools', 'freemium', 4, 'free'],
+            ['Notion', 'notion.so', 'The connected workspace for docs, wikis and projects', 'Productivity', 'freemium', 9, 'free'],
+            ['Figma', 'figma.com', 'Where teams design together', 'Design', 'freemium', 12, 'free'],
             ['Semrush', 'semrush.com', 'Online visibility management platform', 'SEO', 'paid', 15, 'free'],
-            ['Clay', 'clay.com', 'Data enrichment and outreach, automated', 'Sales & Leads', 'paid', 20, 'pro'],
+            ['Clay', 'clay.com', 'Data enrichment and outreach, automated', 'Sales & Leads', 'paid', 20, 'free'],
         ];
 
         foreach ($demo as [$name, $domain, $tagline, $category, $pricing, $daysAgo, $plan]) {
@@ -74,7 +74,7 @@ class DatabaseSeeder extends Seeder
                 'status' => 'approved',
                 'launch_date' => $launch,
                 'is_dofollow' => $plan !== 'free',
-                'featured_until' => $plan === 'featured' ? now()->addDays(7 - $daysAgo) : null,
+                'featured_until' => $plan === 'pro' ? now()->addDays(7 - $daysAgo) : null,
                 'votes_count' => random_int(8, 240),
             ]);
         }

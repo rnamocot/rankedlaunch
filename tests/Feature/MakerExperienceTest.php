@@ -104,11 +104,10 @@ class MakerExperienceTest extends TestCase
 
     public function test_polar_uses_promo_product_for_launch_offer(): void
     {
-        config(['rankedlaunch.polar.products' => ['pro' => 'prod_pro', 'pro_promo' => 'prod_pro_25', 'featured' => 'prod_feat']]);
+        config(['rankedlaunch.polar.products' => ['pro' => 'prod_pro', 'pro_promo' => 'prod_pro_25']]);
         $polar = app(\App\Services\Polar::class);
 
         $this->assertSame('prod_pro_25', $polar->productId(new Payment(['plan' => 'pro', 'is_promo' => true])));
         $this->assertSame('prod_pro', $polar->productId(new Payment(['plan' => 'pro', 'is_promo' => false])));
-        $this->assertSame('prod_feat', $polar->productId(new Payment(['plan' => 'featured', 'is_promo' => false])));
     }
 }

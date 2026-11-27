@@ -24,7 +24,7 @@
         <x-promo-banner :pricing="$pricing" class="mb-6" />
     </div>
 
-    <div class="mx-auto grid grid-cols-1 max-w-5xl gap-4 px-4 sm:px-6 md:grid-cols-3">
+    <div class="mx-auto grid grid-cols-1 max-w-3xl gap-4 px-4 sm:px-6 md:grid-cols-2">
         @foreach ($plans as $key => $plan)
             @php($highlight = $key === 'pro')
             <section data-reveal style="--reveal-i: {{ $loop->index }}" class="card card-hover flex flex-col p-6 {{ $highlight ? '!outline-2 !outline-ink' : '' }}">

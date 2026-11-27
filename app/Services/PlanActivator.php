@@ -21,8 +21,8 @@ class PlanActivator
             $product->status = config('rankedlaunch.review_listings') ? 'pending' : 'approved';
         }
 
-        if ($plan === 'featured') {
-            $days = config('rankedlaunch.plans.featured.featured_days', 7);
+        if ($plan === 'pro') {
+            $days = config('rankedlaunch.plans.pro.featured_days', 7);
             $product->featured_until = $product->launch_date->copy()->startOfDay()->addDays($days);
         }
 

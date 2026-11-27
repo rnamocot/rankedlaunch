@@ -1,3 +1,4 @@
+@props(['spotlight' => null])
 {{--
     Homepage hero background: one ranking graph. A single line climbs from #5 to #1,
     with a soft area under it and a dot that travels along the line. No grid.
@@ -43,16 +44,39 @@
             <path id="hero-graph" d="{{ $line }}" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linejoin="round" stroke-linecap="round" pathLength="1" class="hero-line" />
 
-            {{-- Orange tracker travelling along the line: glow, ring, crosshair ticks, core --}}
-            <g class="hero-runner">
-                <circle r="18" fill="url(#hero-glow)" />
-                <circle r="9" fill="none" stroke="var(--accent)" stroke-width="1.5" />
-                <path d="M-15 0H-11M11 0H15M0 -15V-11M0 11V15" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" />
-                <circle r="3.5" fill="var(--accent)" />
-                <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear" begin="2.6s" data-motion>
-                    <mpath href="#hero-graph" />
-                </animateMotion>
-            </g>
+            @if ($spotlight)
+                {{-- A real app rides the graph, with a floating ribbon (Featured / #1 today) --}}
+                @php
+                    $ribbon = mb_strtoupper($spotlight['label']);
+                    $ribbonWidth = 18 + mb_strlen($ribbon) * 7.2;
+                @endphp
+                <g class="hero-runner">
+                    <circle r="30" fill="url(#hero-glow)" />
+                    <clipPath id="hero-logo-clip" clipPathUnits="objectBoundingBox"><rect width="1" height="1" rx="0.24" /></clipPath>
+                    <rect x="-21" y="-21" width="42" height="42" rx="10" style="fill: var(--surface)" stroke="currentColor" stroke-opacity="0.15" stroke-width="1.5" />
+                    <image href="{{ $spotlight['product']->logoUrl() }}" x="-18" y="-18" width="36" height="36" clip-path="url(#hero-logo-clip)" preserveAspectRatio="xMidYMid slice" />
+                    <g transform="translate(0 -36)">
+                        <rect x="{{ -$ribbonWidth / 2 }}" y="-10" width="{{ $ribbonWidth }}" height="20" rx="10"
+                              style="fill: {{ $spotlight['accent'] ? 'var(--accent)' : 'var(--ink)' }}" />
+                        <text y="3.6" text-anchor="middle" font-size="10" font-weight="700" letter-spacing="0.8"
+                              style="fill: {{ $spotlight['accent'] ? '#fff' : 'var(--on-ink)' }}" font-family="ui-sans-serif, system-ui, sans-serif">{{ $ribbon }}</text>
+                    </g>
+                    <animateMotion dur="11s" repeatCount="indefinite" calcMode="linear" begin="2.6s" data-motion>
+                        <mpath href="#hero-graph" />
+                    </animateMotion>
+                </g>
+            @else
+                {{-- Orange tracker travelling along the line: glow, ring, crosshair ticks, core --}}
+                <g class="hero-runner">
+                    <circle r="18" fill="url(#hero-glow)" />
+                    <circle r="9" fill="none" stroke="var(--accent)" stroke-width="1.5" />
+                    <path d="M-15 0H-11M11 0H15M0 -15V-11M0 11V15" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" />
+                    <circle r="3.5" fill="var(--accent)" />
+                    <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear" begin="2.6s" data-motion>
+                        <mpath href="#hero-graph" />
+                    </animateMotion>
+                </g>
+            @endif
 
             {{-- #1 at the end of the climb --}}
             <circle cx="{{ $end[0] }}" cy="{{ $end[1] }}" r="10" fill="none" stroke="currentColor" stroke-width="1.5" class="hero-end" />

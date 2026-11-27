@@ -132,6 +132,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/chat', [\App\Http\Controllers\Admin\ChatController::class, 'index'])->name('chat');
     Route::delete('/chat/{message}', [\App\Http\Controllers\Admin\ChatController::class, 'destroy'])->name('chat.destroy');
     Route::post('/chat/{message}/mute', [\App\Http\Controllers\Admin\ChatController::class, 'mute'])->name('chat.mute');
+    Route::post('/chat/{message}/ban', [\App\Http\Controllers\Admin\ChatController::class, 'ban'])->name('chat.ban');
     Route::post('/chat/mutes/{mute}/unmute', [\App\Http\Controllers\Admin\ChatController::class, 'unmute'])->name('chat.unmute');
     Route::post('/chat/clear', [\App\Http\Controllers\Admin\ChatController::class, 'clear'])->name('chat.clear');
 

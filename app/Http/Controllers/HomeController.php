@@ -31,13 +31,19 @@ class HomeController extends Controller
         $pulse = self::pulse();
 
         // Small live numbers beside the hero.
+        // The app riding the hero graph: a featured Pro launch (fair rotation), else today's #1.
+        $spotlightProduct = Product::featuredRotation(1)->first();
+        $spotlight = $spotlightProduct
+            ? ['product' => $spotlightProduct, 'label' => 'Featured', 'accent' => true]
+            : ($today->first() ? ['product' => $today->first(), 'label' => '#1 today', 'accent' => false] : null);
+
         $heroStats = [
             'Launching today' => $today->count(),
             'Upvotes today' => \App\Models\Vote::where('created_at', '>=', today())->count(),
             'Makers' => \App\Models\User::has('products')->count(),
         ];
 
-        return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats'));
+        return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats', 'spotlight'));
     }
 
     /**

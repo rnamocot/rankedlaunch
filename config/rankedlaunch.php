@@ -25,9 +25,8 @@ return [
     // Anonymous global chat ("Maker lounge") on public pages.
     'chat_enabled' => (bool) env('RL_CHAT_ENABLED', true),
     'free_slots_per_day' => (int) env('RL_FREE_SLOTS_PER_DAY', 25),
-    'paid_slots_per_day' => (int) env('RL_PAID_SLOTS_PER_DAY', 10),
-    // Pro launches per day (counted inside paid_slots_per_day). Keeps the Featured rotation small and fair.
-    'featured_slots_per_day' => (int) env('RL_FEATURED_SLOTS_PER_DAY', 2),
+    // Pro launches per day. Every Pro launch is featured, so this keeps the homepage rotation valuable.
+    'paid_slots_per_day' => (int) env('RL_PAID_SLOTS_PER_DAY', 5),
     // How many Pro launches the homepage Featured row shows at once (rotates evenly).
     'featured_on_homepage' => 3,
 
@@ -37,33 +36,25 @@ return [
             'name' => 'Free',
             'price' => 0,
             'features' => [
-                'List today or pick any launch date',
+                'List today or pick any launch day',
                 'Ranked on the daily board',
-                'Launch stats and share kit',
+                'Launch hub: stats, share kit and badges',
                 'Nofollow link',
             ],
         ],
         'pro' => [
-            'name' => 'Listing',
-            'price' => 2900,
-            'variant_id' => env('LEMONSQUEEZY_VARIANT_PRO'),
-            'features' => [
-                'Everything in Free',
-                'Dofollow backlink (helps your SEO)',
-                'Priority review',
-            ],
-        ],
-        'featured' => [
             'name' => 'Pro',
             'price' => 3900,
-            'variant_id' => env('LEMONSQUEEZY_VARIANT_FEATURED'),
+            'variant_id' => env('LEMONSQUEEZY_VARIANT_PRO'),
             'featured_days' => 7,
             'features' => [
-                'Everything in Listing',
-                'Featured on the homepage for 7 days, first on your launch day',
+                'Everything in Free',
+                'Dofollow backlink that stays (SEO value)',
+                'Featured on the homepage for 7 days, first on launch day',
                 'Pinned at the top of your category for 7 days',
+                'Shown first in Discover for 7 days',
                 '“Featured” label next to your launch',
-                'Only 2 Pro launches per day',
+                'Priority review, usually same day',
             ],
         ],
     ],
@@ -89,7 +80,6 @@ return [
         'products' => [
             'pro' => env('POLAR_PRODUCT_PRO'),
             'pro_promo' => env('POLAR_PRODUCT_PRO_PROMO'),
-            'featured' => env('POLAR_PRODUCT_FEATURED'),
         ],
     ],
 

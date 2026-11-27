@@ -67,11 +67,11 @@ class MakerDashboardTest extends TestCase
 
     public function test_pro_moves_follow_the_pro_daily_cap_and_feature_window(): void
     {
-        config(['rankedlaunch.featured_slots_per_day' => 1]);
+        config(['rankedlaunch.paid_slots_per_day' => 1]);
         $user = User::factory()->create();
         $full = today()->addDays(3);
-        $this->product(User::factory()->create(), ['plan' => 'featured', 'launch_date' => $full]);
-        $mine = $this->product($user, ['plan' => 'featured', 'launch_date' => today()->addDays(6), 'featured_until' => today()->addDays(13)]);
+        $this->product(User::factory()->create(), ['plan' => 'pro', 'launch_date' => $full]);
+        $mine = $this->product($user, ['plan' => 'pro', 'launch_date' => today()->addDays(6), 'featured_until' => today()->addDays(13)]);
 
         $this->actingAs($user)->post("/dashboard/{$mine->slug}/date", ['launch_date' => $full->toDateString()])->assertSessionHasErrors('launch_date');
 

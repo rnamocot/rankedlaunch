@@ -134,7 +134,7 @@
                     <div class="flex-1">
                         <p class="font-semibold">Make this launch help your SEO</p>
                         <p class="mt-0.5 text-sm text-ink-2">
-                            A {{ config('rankedlaunch.plans.pro.name') }} turns your link into a dofollow backlink, for good.
+                            Pro turns your link into a dofollow backlink for good, and features you on the homepage, your category and Discover for 7 days.
                             @if ($pricing->promoActive())
                                 <span class="font-medium text-ink">{{ \App\Services\Pricing::dollars($pricing->priceFor('pro')) }} instead of {{ \App\Services\Pricing::dollars($pricing->regularPrice('pro')) }}, {{ $pricing->promoRemaining() }} launch-offer spots left.</span>
                             @else

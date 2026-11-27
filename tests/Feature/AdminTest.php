@@ -61,13 +61,13 @@ class AdminTest extends TestCase
     {
         $this->actingAs($this->admin)->put('/admin/settings', [
             'promo__enabled' => '1', 'promo__price' => '15', 'promo__limit' => '10', 'promo__label' => 'Early bird',
-            'plans__pro__price' => '35', 'plans__featured__price' => '59', 'plans__featured__featured_days' => '5',
-            'review_listings' => '0', 'free_slots_per_day' => '21', 'paid_slots_per_day' => '12', 'featured_slots_per_day' => '3',
+            'plans__pro__price' => '35', 'plans__pro__featured_days' => '5', 'chat_enabled' => '1',
+            'review_listings' => '0', 'free_slots_per_day' => '21', 'paid_slots_per_day' => '12',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
         $this->assertSame(1500, config('rankedlaunch.promo.price'));
         $this->assertSame(3500, config('rankedlaunch.plans.pro.price'));
-        $this->get('/pricing')->assertSee('$15')->assertSee('$35')->assertSee('$59')->assertSee('Early bird');
+        $this->get('/pricing')->assertSee('$15')->assertSee('$35')->assertSee('Early bird');
         $this->assertDatabaseHas('activity_logs', ['type' => 'settings']);
 
         app(\App\Services\Settings::class)->apply();
@@ -82,12 +82,12 @@ class AdminTest extends TestCase
         $this->actingAs($this->admin)->put("/admin/products/{$p->slug}", [
             'name' => 'Renamed', 'slug' => 'renamed', 'url' => 'https://new.test', 'tagline' => 'New tagline',
             'description' => 'New description long enough.', 'category_id' => $p->category_id, 'pricing_type' => 'paid',
-            'plan' => 'featured', 'status' => 'approved', 'launch_date' => today()->addDays(3)->toDateString(),
+            'plan' => 'pro', 'status' => 'approved', 'launch_date' => today()->addDays(3)->toDateString(),
             'featured_until' => '', 'is_dofollow' => '1', 'rejection_reason' => '',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
         $p->refresh();
-        $this->assertSame(['Renamed', 'renamed', 'featured', 'approved', true], [$p->name, $p->slug, $p->plan, $p->status, $p->is_dofollow]);
+        $this->assertSame(['Renamed', 'renamed', 'pro', 'approved', true], [$p->name, $p->slug, $p->plan, $p->status, $p->is_dofollow]);
     }
 
     public function test_ban_signs_user_out_and_removes_their_votes(): void

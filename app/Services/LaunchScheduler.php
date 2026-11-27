@@ -9,8 +9,7 @@ use Illuminate\Support\Carbon;
  * Launch calendar. Every plan can launch today ("list it now") or on any future day;
  * the only limits are the daily caps, so the board never gets flooded:
  *  - free_slots_per_day:     free launches per day
- *  - paid_slots_per_day:     Listing + Pro launches per day (shared)
- *  - featured_slots_per_day: Pro launches per day (inside the paid cap)
+ *  - paid_slots_per_day:     Pro launches per day
  */
 class LaunchScheduler
 {
@@ -90,10 +89,6 @@ class LaunchScheduler
 
         $left = match ($plan) {
             'free' => config('rankedlaunch.free_slots_per_day') - $free,
-            'featured' => min(
-                config('rankedlaunch.featured_slots_per_day') - $pro,
-                config('rankedlaunch.paid_slots_per_day') - $paid,
-            ),
             default => config('rankedlaunch.paid_slots_per_day') - $paid,
         };
 

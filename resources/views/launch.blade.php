@@ -86,7 +86,7 @@
     {{-- Free vs Pro --}}
     <section class="mx-auto mt-24 max-w-3xl px-4 sm:px-6">
         <h2 class="section-title" data-reveal>Free or paid?</h2>
-        <p class="mx-auto mt-2 max-w-md text-center text-ink-2">Both launch on the day you choose. A {{ config('rankedlaunch.plans.pro.name') }} adds a backlink that helps your SEO.</p>
+        <p class="mx-auto mt-2 max-w-md text-center text-ink-2">Both launch on the day you choose. Pro adds a backlink that helps your SEO and puts you in front of every visitor for a week.</p>
 
         <div class="tray mt-10" data-reveal><div class="card overflow-hidden text-sm">
             <div class="grid grid-cols-[1fr_5.5rem_5.5rem] items-center px-5 py-3 text-xs font-semibold text-ink-2 sm:grid-cols-[1fr_8rem_8rem]">
@@ -94,13 +94,13 @@
             </div>
             @foreach ([
                 ['List today or pick any day', true, true],
-                ['Homepage, rankings and category', true, true],
-                ['Launch stats (views, clicks, votes)', true, true],
-                ['Launch-day kit', true, true],
-                ['Dofollow backlink', false, true],
-                ['Winner and launch badges', true, true],
+                ['Ranked on the daily board', true, true],
+                ['Launch stats, share kit and badges', true, true],
+                ['Dofollow backlink (SEO value)', false, true],
+                ['Featured on the homepage for 7 days', false, true],
+                ['Pinned at the top of your category', false, true],
+                ['Shown first in Discover', false, true],
                 ['Priority review', false, true],
-                ['Stays in rankings forever', true, true],
             ] as [$label, $free, $pro])
                 <div class="list-row grid grid-cols-[1fr_5.5rem_5.5rem] items-center px-5 py-3 sm:grid-cols-[1fr_8rem_8rem]" style="--inset: 1.25rem">
                     <span class="font-medium">{{ $label }}</span>

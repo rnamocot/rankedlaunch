@@ -39,7 +39,7 @@ class LaunchOfferTest extends TestCase
         config(['rankedlaunch.promo.limit' => 2, 'rankedlaunch.paid_slots_per_day' => 100]);
         $user = User::factory()->create();
 
-        $this->get('/pricing')->assertSee('$20')->assertSee('$29')->assertSee('2 of 2 left');
+        $this->get('/pricing')->assertSee('$20')->assertSee('$39')->assertSee('2 of 2 left');
 
         $first = $this->buyPro($user);
         $this->assertSame(2000, $first->amount);
@@ -52,7 +52,7 @@ class LaunchOfferTest extends TestCase
 
         // Offer is used up: back to the regular price.
         $third = $this->buyPro($user);
-        $this->assertSame(2900, $third->amount);
+        $this->assertSame(3900, $third->amount);
         $this->assertFalse($third->is_promo);
 
         $this->get('/pricing')->assertDontSee('launch-offer spots left');
@@ -65,20 +65,9 @@ class LaunchOfferTest extends TestCase
 
         $held = $this->buyPro($user);
         $this->assertSame(2000, $held->amount);
-        $this->assertSame(2900, $this->buyPro($user)->amount); // spot is held
+        $this->assertSame(3900, $this->buyPro($user)->amount); // spot is held
 
         Payment::query()->update(['created_at' => now()->subHour()]);
         $this->assertSame(2000, $this->buyPro($user)->amount); // released
-    }
-
-    public function test_featured_plan_is_not_discounted(): void
-    {
-        $user = User::factory()->create();
-        $product = $this->draftProduct($user);
-        $this->actingAs($user)->post("/submit/{$product->slug}/launch", [
-            'plan' => 'featured', 'launch_date' => today()->addDays(5)->toDateString(),
-        ]);
-
-        $this->assertSame(3900, Payment::first()->amount);
     }
 }

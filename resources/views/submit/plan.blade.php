@@ -73,7 +73,7 @@
             <section>
                 <h2 class="group-header">Plan</h2>
                 <x-promo-banner :pricing="$pricing" class="mb-3" />
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     @foreach ($plans as $key => $plan)
                         <label class="group card relative flex cursor-pointer flex-col p-5 has-[:checked]:!outline-2 has-[:checked]:!outline-ink">
                             <input type="radio" name="plan" value="{{ $key }}" class="peer sr-only" @checked($selectedPlan === $key)>
@@ -98,7 +98,7 @@
 
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <p class="text-xs text-ink-2">{{ $review ? 'Every listing gets a quick review before it appears.' : 'Your listing appears as soon as you confirm.' }}</p>
-                <button class="btn btn-primary btn-lg" data-plan-submit data-free="List it" data-pro="Continue to payment" data-featured="Continue to payment">Continue</button>
+                <button class="btn btn-primary btn-lg" data-plan-submit data-free="List it" data-pro="Continue to payment">Continue</button>
             </div>
         </form>
     </div>

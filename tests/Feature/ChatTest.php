@@ -115,4 +115,61 @@ class ChatTest extends TestCase
         $this->actingAs($admin)->post('/admin/chat/clear', ['confirm' => '1'])->assertRedirect();
         $this->assertSame(0, ChatMessage::count());
     }
+
+    public function test_toxic_language_is_blocked_but_normal_talk_passes(): void
+    {
+        $moderator = app(ChatModerator::class);
+
+        foreach (['you idiot', 'what a loser', 'kys', 'kill yourself', 'bobo mo', 'tanga ka talaga', 'pakyu', 'i will kill you'] as $bad) {
+            $this->assertNotNull($moderator->check($bad), "Should block: {$bad}");
+        }
+        foreach (['that was a dumb question of mine', 'the trash icon is clever', 'killer feature!', 'stupidly simple onboarding'] as $ok) {
+            $this->assertNull($moderator->check($ok), "Should allow: {$ok}");
+        }
+    }
+
+    public function test_spam_is_refused_without_counting_as_an_offense(): void
+    {
+        $this->send('HELLO EVERYONE LOOK AT MY APP')->assertStatus(422)->assertJsonPath('error', 'Please don’t shout.');
+        $this->send('soooooooooo good')->assertStatus(422);
+        $this->send('Launch day today!')->assertCreated();
+        $this->send('Launch day today!')->assertStatus(422)->assertJsonPath('error', 'You just sent that.');
+        $this->send('Short CAPS OK')->assertCreated();
+    }
+
+    public function test_second_automatic_mute_within_a_day_lasts_seven_days(): void
+    {
+        $moderator = app(ChatModerator::class);
+        $id = '55555555-5555-4555-8555-555555555555';
+
+        foreach (range(1, 3) as $i) {
+            $moderator->recordOffense($id, 'hash-y');
+        }
+        \Illuminate\Support\Facades\DB::table('chat_mutes')->update(['until' => now()->subMinute()]); // first mute ended
+
+        foreach (range(1, 3) as $i) {
+            $moderator->recordOffense($id, 'hash-y');
+        }
+        $latest = \Illuminate\Support\Facades\DB::table('chat_mutes')->latest('id')->first();
+        $this->assertTrue(\Illuminate\Support\Carbon::parse($latest->until)->gt(now()->addDays(6)));
+    }
+
+    public function test_admin_ban_is_permanent_and_can_be_lifted(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+        $id = '66666666-6666-4666-8666-666666666666';
+        $this->send('hello there', $id, '10.0.0.6');
+        $message = ChatMessage::first();
+
+        $this->actingAs($admin)->post("/admin/chat/{$message->id}/ban")->assertRedirect();
+        $this->assertSame(0, ChatMessage::count());
+
+        $this->send('am I back?', $id, '10.0.0.6')->assertForbidden()->assertJsonPath('error', 'You’ve been banned from the chat for breaking the rules.');
+        $this->actingAs($admin)->get('/admin/chat')->assertSee('Banned');
+
+        $mute = \Illuminate\Support\Facades\DB::table('chat_mutes')->first();
+        $this->actingAs($admin)->post("/admin/chat/mutes/{$mute->id}/unmute")->assertRedirect();
+        $this->send('thanks for the second chance', $id, '10.0.0.6')->assertCreated();
+    }
 }

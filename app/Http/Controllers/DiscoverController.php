@@ -33,7 +33,8 @@ class DiscoverController extends Controller
             ->when($filters['pricing'] ?? null, fn ($query, $pricing) => $query->where('pricing_type', $pricing))
             ->when($sort === 'new', fn ($query) => $query->latest('launch_date')->orderByDesc('votes_count'))
             ->when($sort === 'trending', fn ($query) => $query->whereDate('launch_date', '>=', today()->subDays(30))->ranked())
-            ->when($sort === 'top', fn ($query) => $query->ranked())
+            // Pro launches are shown first for their featured week (a paid perk), then by votes.
+            ->when($sort === 'top', fn ($query) => $query->orderByRaw('CASE WHEN featured_until > ? THEN 1 ELSE 0 END DESC', [now()])->ranked())
             ->paginate(24)
             ->withQueryString();
 

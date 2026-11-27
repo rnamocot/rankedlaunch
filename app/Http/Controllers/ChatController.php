@@ -55,7 +55,21 @@ class ChatController extends Controller
         }
 
         if ($moderator->isMuted($chatId, $ipHash)) {
-            return response()->json(['error' => 'You’re muted for a while for breaking the chat rules.'], 403);
+            return response()->json(['error' => $moderator->isBanned($chatId, $ipHash)
+                ? 'You’ve been banned from the chat for breaking the rules.'
+                : 'You’re muted for a while for breaking the chat rules.'], 403);
+        }
+
+        if ($spam = $moderator->spamReason($body)) {
+            return response()->json(['error' => $spam], 422);
+        }
+
+        $duplicate = ChatMessage::where('chat_id', $chatId)
+            ->where('created_at', '>=', now()->subMinutes(2))
+            ->where('body', $body)
+            ->exists();
+        if ($duplicate) {
+            return response()->json(['error' => 'You just sent that.'], 422);
         }
 
         // One message every 3 seconds per person.

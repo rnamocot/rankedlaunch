@@ -91,8 +91,8 @@ class DashboardController extends Controller
         $old = $product->launch_date;
         $product->launch_date = $date;
         // Pro's homepage feature window follows the launch.
-        if ($product->plan === 'featured') {
-            $product->featured_until = $date->copy()->addDays(config('rankedlaunch.plans.featured.featured_days', 7));
+        if ($product->plan === 'pro') {
+            $product->featured_until = $date->copy()->addDays(config('rankedlaunch.plans.pro.featured_days', 7));
         }
         // Reminder emails should go out again for the new date.
         $product->notified_tomorrow_at = null;
