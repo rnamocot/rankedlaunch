@@ -22,7 +22,7 @@ class SocialAuthController extends Controller
         abort_unless(in_array($provider, self::PROVIDERS), 404);
 
         if (! in_array($provider, self::enabled())) {
-            return redirect()->route('login')->withErrors(['email' => ucfirst($provider).' sign-in is not set up yet. Add its keys to .env.']);
+            return redirect()->route('login')->withErrors(['email' => ucfirst($provider).' sign-in isn’t available yet. Please use your email instead.']);
         }
 
         return Socialite::driver($provider)->redirect();

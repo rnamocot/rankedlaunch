@@ -39,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('*', fn ($view) => $view->with('pricing', app(Pricing::class)));
 
-        View::share('socialProviders', SocialAuthController::PROVIDERS);
+        // Live site: only buttons whose keys are set. Local: all three, so the design can be previewed.
+        View::composer('*', fn ($view) => $view->with('socialProviders', app()->isLocal() ? SocialAuthController::PROVIDERS : SocialAuthController::enabled()));
     }
 }
