@@ -80,6 +80,7 @@ class DashboardController extends Controller
         $request->validate(['confirm' => ['accepted']], ['confirm.accepted' => 'Tick the box to confirm you want to delete this listing.']);
 
         $name = $product->name;
+        $wasDraft = $product->status === 'draft';
         if ($product->logo && ! str_starts_with($product->logo, 'http')) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($product->logo);
         }
@@ -89,7 +90,7 @@ class DashboardController extends Controller
         ActivityLog::record('moderation', "{$request->user()->name} deleted their listing {$name}", user: $request->user());
         $product->delete();
 
-        return redirect()->route('dashboard')->with('status', "{$name} was deleted.");
+        return redirect()->route('dashboard')->with('status', $wasDraft ? "Draft “{$name}” discarded." : "{$name} was deleted.");
     }
 
     /** Launch hub: what happens next, launch-day kit, and results for one product. */

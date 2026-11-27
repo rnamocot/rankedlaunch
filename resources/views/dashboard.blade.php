@@ -160,6 +160,19 @@
                                                         <a href="{{ route('product', $product) }}" class="btn btn-outline btn-sm" title="View public page" aria-label="View public page"><x-icon name="arrow-up-right" :size="15" :stroke="2" /></a>
                                                     @endif
                                                     <a href="{{ route('launch.hub', $product) }}" class="btn btn-secondary btn-sm">Manage</a>
+                                                    @if (in_array($product->status, ['draft', 'awaiting_payment', 'rejected']))
+                                                        <details class="relative">
+                                                            <summary class="btn btn-outline btn-sm list-none !px-2.5 [&::-webkit-details-marker]:hidden" title="Delete" aria-label="Delete {{ $product->name }}">
+                                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                                            </summary>
+                                                            <form method="POST" action="{{ route('launch.destroy', $product) }}" class="card absolute right-0 z-20 mt-2 w-56 space-y-2.5 p-3 text-left">
+                                                                @csrf @method('DELETE')
+                                                                <input type="hidden" name="confirm" value="1">
+                                                                <p class="text-xs text-ink-2">Delete <span class="font-semibold text-ink">{{ $product->name }}</span>? This can’t be undone.</p>
+                                                                <button class="btn btn-secondary btn-sm w-full !text-danger">Delete {{ $product->status === 'draft' ? 'draft' : 'listing' }}</button>
+                                                            </form>
+                                                        </details>
+                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
@@ -168,7 +181,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="mt-2 px-1 text-xs text-ink-2">Edit, reschedule or delete a listing from its <span class="font-medium text-ink">Manage</span> page.</p>
+                    <p class="mt-2 px-1 text-xs text-ink-2">Edit, reschedule or delete a listing from its <span class="font-medium text-ink">Manage</span> page. Unfinished drafts can be deleted right here.</p>
                 </section>
             @endif
 

@@ -84,4 +84,17 @@ class DashboardChartsTest extends TestCase
     {
         $this->get('/')->assertOk()->assertSee('data-flip-clock', false)->assertSee('voting closes in', false);
     }
+
+    public function test_drafts_can_be_deleted_from_the_dashboard_and_go_live_step(): void
+    {
+        $user = User::factory()->create();
+        $draft = $this->product($user, ['status' => 'draft', 'launch_date' => null, 'name' => 'HalfDone']);
+
+        $this->actingAs($user)->get('/dashboard')->assertSee('Delete draft');
+        $this->actingAs($user)->get("/submit/{$draft->slug}/launch")->assertSee('Discard this draft');
+
+        $this->actingAs($user)->delete("/dashboard/{$draft->slug}", ['confirm' => '1'])
+            ->assertRedirect('/dashboard')->assertSessionHas('status', 'Draft “HalfDone” discarded.');
+        $this->assertModelMissing($draft);
+    }
 }

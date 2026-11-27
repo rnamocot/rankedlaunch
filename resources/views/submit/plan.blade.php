@@ -97,9 +97,21 @@
             </section>
 
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <p class="text-xs text-ink-2">{{ $review ? 'Every listing gets a quick review before it appears.' : 'Your listing appears as soon as you confirm.' }}</p>
+                <p class="text-xs text-ink-2">
+                    {{ $review ? 'Every listing gets a quick review before it appears.' : 'Your listing appears as soon as you confirm.' }}
+                    @if ($product->status === 'draft')
+                        <button type="submit" form="discard-draft" class="ml-1 font-medium text-ink underline underline-offset-2 hover:text-danger">Discard this draft</button>
+                    @endif
+                </p>
                 <button class="btn btn-primary btn-lg" data-plan-submit data-free="List it" data-pro="Continue to payment">Continue</button>
             </div>
         </form>
+
+        @if ($product->status === 'draft')
+            <form id="discard-draft" method="POST" action="{{ route('launch.destroy', $product) }}" hidden>
+                @csrf @method('DELETE')
+                <input type="hidden" name="confirm" value="1">
+            </form>
+        @endif
     </div>
 </x-layout>
