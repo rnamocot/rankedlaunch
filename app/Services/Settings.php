@@ -28,6 +28,9 @@ class Settings
             'plans.featured.price' => ['Pro (USD)', 'money', 'Regular one-time price.'],
             'plans.featured.featured_days' => ['Pro pinned days', 'int', 'How long Pro launches stay pinned on the homepage.'],
         ],
+        'Community' => [
+            'chat_enabled' => ['Maker lounge chat', 'bool', 'Anonymous global chat on public pages. Turn off any time.'],
+        ],
         'Listings' => [
             'review_listings' => ['Review listings before they go live', 'bool', 'On: you approve each new listing. Off: listings go live instantly (you can still remove them).'],
             'free_slots_per_day' => ['Free launches per day', 'int', 'Cap on free launches each day, so the board doesn’t get flooded.'],

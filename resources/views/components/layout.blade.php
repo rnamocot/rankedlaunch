@@ -174,5 +174,8 @@
             <a class="hover:text-ink" href="mailto:{{ config('rankedlaunch.contact_email') }}">Contact</a>
         </div>
     </footer>
+    @if (config('rankedlaunch.chat_enabled') && ! request()->routeIs('admin*', 'checkout*') && request()->route())
+        <x-chat-widget />
+    @endif
 </body>
 </html>

@@ -22,6 +22,8 @@ return [
     // When true, new listings wait for admin approval; when false they go live instantly.
     'review_listings' => (bool) env('RL_REVIEW_LISTINGS', true),
     'max_days_ahead' => 90,
+    // Anonymous global chat ("Maker lounge") on public pages.
+    'chat_enabled' => (bool) env('RL_CHAT_ENABLED', true),
     'free_slots_per_day' => (int) env('RL_FREE_SLOTS_PER_DAY', 25),
     'paid_slots_per_day' => (int) env('RL_PAID_SLOTS_PER_DAY', 10),
     // Pro launches per day (counted inside paid_slots_per_day). Keeps the Featured rotation small and fair.

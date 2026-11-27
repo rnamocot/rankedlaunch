@@ -9,6 +9,7 @@
         ['Votes', 'admin.votes', 'chevron-up', null],
         ['Subscribers', 'admin.subscribers*', 'send', null, 'admin.subscribers.index'],
         ['Categories', 'admin.categories*', 'pin', null, 'admin.categories'],
+        ['Chat', 'admin.chat*', 'send', null, 'admin.chat'],
         ['Activity', 'admin.activity', 'clock', null],
         ['Settings', 'admin.settings*', 'code', null, 'admin.settings'],
         ['System', 'admin.system*', 'shield', null, 'admin.system'],

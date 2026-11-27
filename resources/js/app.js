@@ -397,3 +397,157 @@ document.querySelectorAll('[data-rank-live]').forEach((board) => {
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.querySelectorAll('[data-motion]').forEach((el) => el.remove());
 }
+
+
+// Maker lounge chat: anonymous, polls every 4s while open. Text only (no HTML).
+document.querySelectorAll('[data-chat]').forEach((root) => {
+    const $ = (sel) => root.querySelector(sel);
+    const panel = $('[data-chat-panel]');
+    const log = $('[data-chat-log]');
+    const empty = $('[data-chat-empty]');
+    const form = $('[data-chat-form]');
+    const input = form.querySelector('input');
+    const error = $('[data-chat-error]');
+    const unread = $('[data-chat-unread]');
+    const renameForm = $('[data-chat-rename]');
+    const token = () => document.querySelector('meta[name="csrf-token"]')?.content;
+
+    let lastId = 0;
+    let open = false;
+    let loaded = false;
+    let pollTimer;
+    let unreadCount = 0;
+
+    const timeOf = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const showError = (text) => {
+        error.textContent = text;
+        error.hidden = !text;
+        if (text) setTimeout(() => (error.hidden = true), 5000);
+    };
+
+    const setOnline = (n) => root.querySelectorAll('[data-chat-online], [data-chat-online-count]').forEach((el) => (el.textContent = n));
+
+    const render = (messages) => {
+        if (!messages.length) return;
+        const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
+        empty?.remove();
+
+        for (const m of messages) {
+            if (m.id <= lastId) continue;
+            lastId = m.id;
+
+            const row = document.createElement('div');
+            row.className = m.mine ? 'flex flex-col items-end' : 'flex flex-col items-start';
+
+            const meta = document.createElement('p');
+            meta.className = 'mb-1 text-[0.6875rem] text-ink-2';
+            const name = document.createElement('span');
+            name.className = 'font-semibold text-ink';
+            name.textContent = m.mine ? 'You' : m.name;
+            meta.append(name, document.createTextNode(` · ${timeOf(m.time)}`));
+
+            const bubble = document.createElement('p');
+            bubble.className = m.mine
+                ? 'max-w-[85%] rounded-2xl rounded-br-md bg-ink px-3.5 py-2 text-sm text-on-ink break-words'
+                : 'max-w-[85%] rounded-2xl rounded-bl-md bg-fill px-3.5 py-2 text-sm break-words';
+            bubble.textContent = m.body;
+
+            row.append(meta, bubble);
+            log.append(row);
+
+            if (!open && loaded && !m.mine) unreadCount++;
+        }
+
+        if (open && (nearBottom || !loaded)) log.scrollTop = log.scrollHeight;
+        unread.hidden = open || unreadCount === 0;
+        unread.textContent = unreadCount > 9 ? '9+' : unreadCount;
+    };
+
+    const fetchMessages = async () => {
+        try {
+            const response = await fetch(`${root.dataset.src}${lastId ? `?after=${lastId}` : ''}`, { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const data = await response.json();
+            $('[data-chat-me]').textContent = data.me;
+            setOnline(data.online);
+            render(data.messages || []);
+            loaded = true;
+        } catch {
+            /* offline: try again next tick */
+        }
+    };
+
+    const schedule = () => {
+        clearInterval(pollTimer);
+        if (document.hidden) return;
+        // Fast while open; slow in the background (only after the chat was opened once).
+        if (open) pollTimer = setInterval(fetchMessages, 4000);
+        else if (loaded) pollTimer = setInterval(fetchMessages, 30000);
+    };
+
+    const setOpen = (value) => {
+        open = value;
+        panel.hidden = !open;
+        $('[data-chat-open]').hidden = open && window.matchMedia('(max-width: 639px)').matches;
+        if (open) {
+            unreadCount = 0;
+            unread.hidden = true;
+            fetchMessages().then(() => (log.scrollTop = log.scrollHeight));
+            setTimeout(() => input.focus(), 50);
+        }
+        schedule();
+    };
+
+    $('[data-chat-open]').addEventListener('click', () => setOpen(!open));
+    $('[data-chat-close]').addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && open) setOpen(false); });
+    document.addEventListener('visibilitychange', schedule);
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const body = input.value.trim();
+        if (!body) return;
+        input.disabled = true;
+        try {
+            const response = await fetch(root.dataset.post, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': token() },
+                body: JSON.stringify({ body }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                showError(data.error || 'Message not sent. Try again.');
+            } else {
+                input.value = '';
+                showError('');
+                render([data.message]);
+                log.scrollTop = log.scrollHeight;
+            }
+        } finally {
+            input.disabled = false;
+            input.focus();
+        }
+    });
+
+    $('[data-chat-rename-open]').addEventListener('click', () => {
+        renameForm.hidden = false;
+        renameForm.querySelector('input').value = $('[data-chat-me]').textContent;
+        renameForm.querySelector('input').focus();
+    });
+    $('[data-chat-rename-cancel]').addEventListener('click', () => (renameForm.hidden = true));
+    renameForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const name = renameForm.querySelector('input').value.trim();
+        const response = await fetch(root.dataset.rename, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': token() },
+            body: JSON.stringify({ name }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) return showError(data.error || 'That name isn’t allowed.');
+        $('[data-chat-me]').textContent = data.me;
+        renameForm.hidden = true;
+        showError('');
+    });
+});

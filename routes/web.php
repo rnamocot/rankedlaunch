@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\Route;
 // Public
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/live/today.json', [HomeController::class, 'liveToday'])->middleware('throttle:60,1')->name('live.today');
+
+// Anonymous global chat ("Maker lounge")
+Route::get('/chat/messages', [\App\Http\Controllers\ChatController::class, 'index'])->middleware('throttle:40,1')->name('chat.index');
+Route::post('/chat/messages', [\App\Http\Controllers\ChatController::class, 'store'])->middleware('throttle:20,1')->name('chat.store');
+Route::post('/chat/name', [\App\Http\Controllers\ChatController::class, 'rename'])->middleware('throttle:10,1')->name('chat.rename');
 Route::get('/rankings/{period?}', [RankingController::class, 'show'])->name('rankings');
 Route::get('/category/{category}', [CategoryController::class, 'show'])->name('category');
 Route::get('/apps/{product}', [ProductController::class, 'show'])->name('product');
@@ -123,6 +128,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/categories/{category:id}', [\App\Http\Controllers\Admin\CategoryController::class, 'destroy'])->name('categories.destroy');
 
     Route::get('/activity', \App\Http\Controllers\Admin\ActivityController::class)->name('activity');
+
+    Route::get('/chat', [\App\Http\Controllers\Admin\ChatController::class, 'index'])->name('chat');
+    Route::delete('/chat/{message}', [\App\Http\Controllers\Admin\ChatController::class, 'destroy'])->name('chat.destroy');
+    Route::post('/chat/{message}/mute', [\App\Http\Controllers\Admin\ChatController::class, 'mute'])->name('chat.mute');
+    Route::post('/chat/mutes/{mute}/unmute', [\App\Http\Controllers\Admin\ChatController::class, 'unmute'])->name('chat.unmute');
+    Route::post('/chat/clear', [\App\Http\Controllers\Admin\ChatController::class, 'clear'])->name('chat.clear');
 
     Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'edit'])->name('settings');
     Route::put('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
