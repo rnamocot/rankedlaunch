@@ -90,7 +90,7 @@ class MakerDashboardTest extends TestCase
 
         $this->actingAs($user)->get('/dashboard')->assertOk()
             ->assertSee('Hi, Renie')
-            ->assertSeeInOrder(['Live today', 'LiveOne', 'Needs your attention', 'DraftOne', 'Upcoming launches', 'SoonOne'])
+            ->assertSeeInOrder(['Live today', 'LiveOne', 'Needs attention', 'DraftOne', 'Upcoming', 'SoonOne'])
             ->assertSee('Best daily rank')
             ->assertSee('Your upvotes');
     }

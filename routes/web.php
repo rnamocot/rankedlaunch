@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/{product}', [DashboardController::class, 'show'])->name('launch.hub');
+    Route::delete('/dashboard/{product}', [DashboardController::class, 'destroy'])->name('launch.destroy');
     Route::get('/dashboard/{product}/date', [DashboardController::class, 'reschedule'])->name('launch.date');
     Route::post('/dashboard/{product}/date', [DashboardController::class, 'updateDate'])->middleware('throttle:10,1')->name('launch.reschedule');
 

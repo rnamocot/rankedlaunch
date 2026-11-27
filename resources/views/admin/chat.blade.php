@@ -44,7 +44,7 @@
             <section>
                 <h2 class="group-header">Rules (automatic)</h2>
                 <div class="card p-4 text-sm text-ink-2">
-                    Blocked: swearing, sexual talk, insults and harassment, threats and hate terms (English and Filipino), links and phone numbers. Refused as spam: shouting in caps, repeated characters, the same message twice. 3 blocked attempts in 10 minutes = 30 minutes muted; muted again within 24 hours = 7 days. One message every 3 seconds, 280 characters max. Messages are removed after 14 days.
+                    Blocked: swearing, sexual talk, insults and harassment, threats and hate terms (English and Filipino), links and phone numbers. Refused as spam: shouting in caps, repeated characters, the same message twice. 3 blocked attempts in 10 minutes = 30 minutes muted; muted again within 24 hours = 7 days. One message every 3 seconds, 280 characters max. Only the latest 50 messages are kept; older ones are deleted as new ones arrive.
                 </div>
             </section>
 

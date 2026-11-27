@@ -37,6 +37,8 @@
                 </div>
                 <p class="mt-3 text-sm text-ink-2">Free to list. No card needed.</p>
 
+                <x-flip-clock :to="today('UTC')->addDay()" label="Today’s voting closes in" class="mt-10 flex flex-col items-center lg:items-start" />
+
                 <dl class="mx-auto mt-10 grid max-w-md grid-cols-3 gap-6 lg:mx-0">
                     @foreach ($heroStats as $label => $value)
                         <div>

@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
  */
 class ChatController extends Controller
 {
-    private const HISTORY = 60;          // messages shown when the panel opens
+    public const KEEP = 50;              // only the latest 50 messages exist; older ones are deleted
     private const ONLINE_WINDOW = 60;    // seconds since last poll that counts as "online"
 
     public function index(Request $request)
@@ -29,7 +29,7 @@ class ChatController extends Controller
         $after = (int) $request->query('after', 0);
         $messages = ChatMessage::query()
             ->when($after > 0, fn ($q) => $q->where('id', '>', $after)->orderBy('id')->limit(100),
-                fn ($q) => $q->latest('id')->limit(self::HISTORY))
+                fn ($q) => $q->latest('id')->limit(self::KEEP))
             ->get()
             ->sortBy('id')
             ->values()
@@ -93,9 +93,10 @@ class ChatController extends Controller
             'ip_hash' => $ipHash,
         ]);
 
-        // Keep the table small: occasionally drop messages older than 14 days.
-        if (random_int(1, 50) === 1) {
-            ChatMessage::where('created_at', '<', now()->subDays(14))->delete();
+        // Rolling window: when message 51 arrives, the oldest one is deleted.
+        $oldestKept = ChatMessage::orderByDesc('id')->skip(self::KEEP - 1)->value('id');
+        if ($oldestKept) {
+            ChatMessage::where('id', '<', $oldestKept)->delete();
         }
 
         return $this->withIdentity(response()->json(['message' => $message->toPublic($chatId)], 201), $chatId, $name);

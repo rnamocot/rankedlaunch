@@ -577,3 +577,59 @@ document.querySelectorAll('[data-local-time]').forEach((el) => {
         body: JSON.stringify({ timezone: tz }),
     }).catch(() => {});
 })();
+
+// 3D flip clock: counts down to data-to; changed digits fold over like a split-flap display.
+document.querySelectorAll('[data-flip-clock]').forEach((clock) => {
+    const target = new Date(clock.dataset.to).getTime();
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cards = {};
+    clock.querySelectorAll('[data-digit]').forEach((el) => (cards[el.dataset.digit] = { el, value: null }));
+
+    const set = (card, next) => {
+        if (card.value === next) return;
+        const [top, bottom, fold, unfold] = card.el.querySelectorAll('.flip-half > span');
+        const prev = card.value ?? next;
+        card.value = next;
+
+        if (reduce || prev === next) {
+            top.textContent = bottom.textContent = fold.textContent = unfold.textContent = next;
+            return;
+        }
+
+        // Static top shows the new digit; the folding leaf still shows the old one.
+        top.textContent = next;
+        fold.textContent = prev;
+        unfold.textContent = next;
+        bottom.textContent = prev;
+
+        card.el.classList.remove('is-flipping');
+        void card.el.offsetWidth; // restart the animation
+        card.el.classList.add('is-flipping');
+
+        clearTimeout(card.timer);
+        card.timer = setTimeout(() => {
+            bottom.textContent = next;
+            card.el.classList.remove('is-flipping');
+        }, 620);
+    };
+
+    const tick = () => {
+        let s = Math.max(0, Math.floor((target - Date.now()) / 1000));
+        const parts = {
+            hours: String(Math.floor(s / 3600) % 100).padStart(2, '0'),
+            minutes: String(Math.floor((s % 3600) / 60)).padStart(2, '0'),
+            seconds: String(s % 60).padStart(2, '0'),
+        };
+        for (const [unit, value] of Object.entries(parts)) {
+            set(cards[`${unit}-0`], value[0]);
+            set(cards[`${unit}-1`], value[1]);
+        }
+        if (s === 0 && !clock.dataset.reloading) {
+            clock.dataset.reloading = '1';
+            setTimeout(() => window.location.reload(), 3000); // new day: fresh board
+        }
+    };
+
+    tick();
+    setInterval(tick, 1000);
+});

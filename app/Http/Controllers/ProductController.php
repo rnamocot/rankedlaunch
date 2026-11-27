@@ -44,6 +44,7 @@ class ProductController extends Controller
             $seen = $request->session()->get('clicked', []);
             if (! in_array($product->id, $seen)) {
                 $product->increment('clicks_count');
+                $this->bumpDaily($product, 'clicks');
                 $request->session()->push('clicked', $product->id);
             }
         }
@@ -60,6 +61,7 @@ class ProductController extends Controller
         $seen = $request->session()->get('viewed', []);
         if (! in_array($product->id, $seen)) {
             $product->increment('views_count');
+            $this->bumpDaily($product, 'views');
             $request->session()->push('viewed', $product->id);
         }
     }
@@ -67,5 +69,15 @@ class ProductController extends Controller
     private function isBot(Request $request): bool
     {
         return (bool) preg_match('/bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget/i', (string) $request->userAgent());
+    }
+
+    /** Per-day counters behind the maker dashboard charts. */
+    private function bumpDaily(Product $product, string $column): void
+    {
+        \Illuminate\Support\Facades\DB::table('product_daily_stats')->upsert(
+            [['product_id' => $product->id, 'date' => today()->toDateString(), $column => 1]],
+            ['product_id', 'date'],
+            [$column => \Illuminate\Support\Facades\DB::raw("{$column} + 1")],
+        );
     }
 }

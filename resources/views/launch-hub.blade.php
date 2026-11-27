@@ -260,6 +260,22 @@
                 @endif
             </section>
 
+            {{-- Delete listing --}}
+            <section id="delete">
+                <h2 class="group-header">Danger zone</h2>
+                <form method="POST" action="{{ route('launch.destroy', $product) }}" class="card space-y-3 p-4">
+                    @csrf @method('DELETE')
+                    <p class="text-sm text-ink-2">Deleting removes {{ $product->name }}’s page, votes, stats and images for good.
+                        @if ($product->plan !== 'free' && $product->isLive())
+                            Paid launches that already went live aren’t refunded.
+                        @endif
+                    </p>
+                    <label class="flex items-start gap-2 text-xs text-ink-2"><input type="checkbox" name="confirm" value="1" class="mt-0.5 accent-[var(--ink)]"> I understand this can’t be undone.</label>
+                    @error('confirm')<p class="field-error">{{ $message }}</p>@enderror
+                    <button class="btn btn-secondary btn-sm w-full !text-danger">Delete this listing</button>
+                </form>
+            </section>
+
             {{-- Other places --}}
             <section>
                 <h2 class="group-header">Launch everywhere</h2>
