@@ -69,6 +69,7 @@ class Pricing
 
     public static function dollars(int $cents): string
     {
-        return '$'.rtrim(rtrim(number_format($cents / 100, 2), '0'), '.');
+        // Whole dollars stay short ($29); anything with cents shows both digits ($19.50).
+        return '$'.number_format($cents / 100, $cents % 100 === 0 ? 0 : 2);
     }
 }

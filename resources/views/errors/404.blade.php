@@ -1,11 +1,11 @@
-<x-layout title="Page not found" :noindex="true">
-    <section class="intro mx-auto max-w-xl px-4 pt-24 text-center sm:px-6">
-        <p class="text-sm font-semibold tabular-nums text-ink-2">404</p>
-        <h1 class="large-title mt-3">This page didn’t make the board.</h1>
-        <p class="mt-4 text-ink-2">It may have moved, or the product hasn’t launched yet.</p>
-        <div class="mt-8 flex flex-wrap justify-center gap-2.5">
-            <a href="{{ route('home') }}" class="btn btn-primary btn-lg">See today’s launches</a>
-            <a href="{{ route('rankings', 'week') }}" class="btn btn-outline btn-lg">Top this week</a>
-        </div>
-    </section>
-</x-layout>
+<x-error-page code="404" title="This page didn’t make the board." message="It may have moved, or the product hasn’t launched yet. Try a search, or start from today’s launches.">
+    <form method="GET" action="{{ route('discover') }}" class="relative mt-8 w-full max-w-sm" role="search">
+        <x-icon name="search" :size="17" class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-2" />
+        <label for="notfound-search" class="sr-only">Search tools</label>
+        <input id="notfound-search" name="q" placeholder="Search tools" class="input !h-11 bg-surface !pl-10 shadow-[inset_0_0_0_1px_var(--line)]">
+    </form>
+    <div class="mt-5 flex flex-wrap justify-center gap-2.5">
+        <a href="{{ route('home') }}" class="btn btn-primary">Today’s launches</a>
+        <a href="{{ route('rankings', 'week') }}" class="btn btn-outline">Top this week</a>
+    </div>
+</x-error-page>

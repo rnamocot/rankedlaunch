@@ -26,9 +26,12 @@ class AppServiceProvider extends ServiceProvider
             $attributes = request()->attributes;
 
             if (! $attributes->has('voted_ids')) {
-                $attributes->set('voted_ids', Auth::check()
-                    ? Vote::where('user_id', Auth::id())->pluck('product_id')->flip()->all()
-                    : []);
+                try {
+                    $ids = Auth::check() ? Vote::where('user_id', Auth::id())->pluck('product_id')->flip()->all() : [];
+                } catch (\Throwable) {
+                    $ids = []; // e.g. database down while rendering an error page
+                }
+                $attributes->set('voted_ids', $ids);
             }
 
             $view->with('votedIds', $attributes->get('voted_ids'));

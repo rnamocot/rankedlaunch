@@ -1,0 +1,82 @@
+[
+    {
+        "name": "ClickVerve",
+        "url": "https://clickverveinteractive.com",
+        "tagline": "Turn website visitors into customers with quizzes, product recommenders and calculators.",
+        "category": "Marketing",
+        "pricing": "freemium",
+        "logo": "https://apps.renienamocot.com/logos/clickverve.png",
+        "screenshots": ["https://apps.renienamocot.com/shots/clickverve.jpg"],
+        "launch_day": 0
+    },
+    {
+        "name": "Zendz Tools",
+        "url": "https://tools.zendz.dev",
+        "tagline": "88+ free tools for developers, SEO, marketing and design. No sign-up needed.",
+        "category": "Developer Tools",
+        "pricing": "free",
+        "logo": "https://apps.renienamocot.com/logos/zendz-tools.png",
+        "screenshots": ["https://apps.renienamocot.com/shots/zendz-tools.jpg"],
+        "launch_day": 0
+    },
+    {
+        "name": "tarsiflow",
+        "url": "https://tarsiflow.com",
+        "tagline": "Leads, clients, projects, proposals and invoices in one place for freelancers and small agencies.",
+        "category": "CRM",
+        "pricing": "freemium",
+        "logo": "https://apps.renienamocot.com/logos/tarsiflow.webp",
+        "screenshots": ["https://apps.renienamocot.com/shots/tarsiflow.jpg"],
+        "launch_day": 1
+    },
+    {
+        "name": "FilRadio",
+        "url": "https://filradio.xyz",
+        "tagline": "Tap a pin on the map and listen live to 900+ Philippine FM, AM and online stations.",
+        "category": "Music & Audio",
+        "pricing": "free",
+        "logo": "https://apps.renienamocot.com/logos/filradio.png",
+        "screenshots": ["https://apps.renienamocot.com/shots/filradio.jpg"],
+        "launch_day": 1
+    },
+    {
+        "name": "MyTindahan POS",
+        "url": "https://pos.mytindahan.store",
+        "tagline": "Point of sale for sari-sari and grocery stores. Sales, utang, GCash and stock, no internet needed.",
+        "category": "E-commerce",
+        "pricing": "freemium",
+        "logo": "https://apps.renienamocot.com/logos/mytindahan-pos.png",
+        "screenshots": ["https://apps.renienamocot.com/shots/mytindahan-pos.jpg"],
+        "launch_day": 2
+    },
+    {
+        "name": "MyPickleball",
+        "url": "https://mypickleball-psi.vercel.app",
+        "tagline": "Court bookings, open play queues, coaching, memberships and payments for pickleball clubs.",
+        "category": "Health & Fitness",
+        "pricing": "freemium",
+        "logo": "https://apps.renienamocot.com/logos/mypickleball.svg",
+        "screenshots": ["https://apps.renienamocot.com/shots/mypickleball.jpg"],
+        "launch_day": 2
+    },
+    {
+        "name": "MyTindahan",
+        "url": "https://mytindahan.store",
+        "tagline": "Know your sales, utang and stock from anywhere. Inventory, GCash and e-load, even offline.",
+        "category": "E-commerce",
+        "pricing": "freemium",
+        "logo": "https://apps.renienamocot.com/logos/mytindahan.png",
+        "screenshots": ["https://apps.renienamocot.com/shots/mytindahan.jpg"],
+        "launch_day": 3
+    },
+    {
+        "name": "MyBigasan",
+        "url": "https://www.mybigasan.com",
+        "tagline": "Run your bigasan from one app. Rice per kilo, pack or sack, retail and wholesale, clean utang ledger.",
+        "category": "E-commerce",
+        "pricing": "freemium",
+        "logo": "https://apps.renienamocot.com/logos/mybigasan.png",
+        "screenshots": ["https://apps.renienamocot.com/shots/mybigasan.jpg"],
+        "launch_day": 3
+    }
+]
