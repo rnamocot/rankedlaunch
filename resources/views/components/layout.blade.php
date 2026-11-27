@@ -59,7 +59,7 @@
     @endif
     {{ $head ?? '' }}
 </head>
-<body class="min-h-screen font-sans">
+<body class="min-h-screen font-sans" @auth data-user-tz="{{ auth()->user()->timezone }}" data-tz-url="{{ route('account.timezone') }}" @endauth>
     @if ($pricing->promoActive() && ! request()->routeIs('checkout*', 'admin*'))
         <x-promo-marquee :pricing="$pricing" />
     @endif

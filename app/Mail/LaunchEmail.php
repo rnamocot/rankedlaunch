@@ -43,6 +43,9 @@ class LaunchEmail extends Mailable
         $p = $this->product;
         $name = $p->name;
         $date = $p->launch_date?->format('l, M j');
+        // When the launch goes live / voting closes, in the maker's own time zone if we know it.
+        $liveAt = $p->launch_date ? $p->user->localTime(\Illuminate\Support\Carbon::parse($p->launch_date->toDateString(), 'UTC')) : null;
+        $closesAt = $p->launch_date ? $p->user->localTime(\Illuminate\Support\Carbon::parse($p->launch_date->toDateString(), 'UTC')->addDay()) : null;
         $hub = route('launch.hub', $p);
         $public = route('product', $p);
 
@@ -60,10 +63,10 @@ class LaunchEmail extends Mailable
             ],
             'approved' => [
                 'subject' => "{$name} is approved",
-                'preheader' => "You go live at 00:00 UTC on {$date}.",
+                'preheader' => "You go live on {$date} at {$liveAt}.",
                 'heading' => "{$name} is approved",
                 'lines' => [
-                    "You’re on the board. {$name} goes live at 00:00 UTC on {$date}.",
+                    "You’re on the board. {$name} goes live on {$date} at {$liveAt}.",
                     'Now is a good time to write your launch posts and tell your users the date. Your share kit has ready-to-post text for X and LinkedIn.',
                 ],
                 'cta' => ['Get your share kit', $hub],
@@ -84,7 +87,7 @@ class LaunchEmail extends Mailable
                 'preheader' => 'A quick checklist for launch day.',
                 'heading' => "Tomorrow’s the day",
                 'lines' => [
-                    "{$name} goes live at 00:00 UTC. The first few hours decide most of the ranking, so have these ready tonight:",
+                    "{$name} goes live at {$liveAt}. The first few hours decide most of the ranking, so have these ready before then:",
                 ],
                 'list' => [
                     'Your launch post for X and LinkedIn (in your share kit)',
@@ -95,10 +98,10 @@ class LaunchEmail extends Mailable
             ],
             'live' => [
                 'subject' => "{$name} is live on RankedLaunch",
-                'preheader' => 'Voting is open until midnight UTC.',
+                'preheader' => "Voting is open until {$closesAt}.",
                 'heading' => "{$name} is live",
                 'lines' => [
-                    'Voting is open until midnight UTC. Share your page now: launches that get votes early stay near the top all day.',
+                    "Voting is open until {$closesAt}. Share your page now: launches that get votes early stay near the top all day.",
                     'Your share image updates with your rank, so every post you make looks right.',
                 ],
                 'cta' => ['See your launch', $public],

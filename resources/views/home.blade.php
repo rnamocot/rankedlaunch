@@ -80,7 +80,7 @@
                         </ol>
                     @else
                         <div class="px-6 py-16 text-center">
-                            <p class="font-semibold">Today’s launches go live at midnight UTC</p>
+                            <p class="font-semibold">New launches go live at <x-local-time :at="today('UTC')->addDay()" /></p>
                             <p class="mt-1 text-sm text-ink-2">Want to be first in line tomorrow?</p>
                             <a href="{{ route('submit') }}" class="btn btn-primary btn-sm mt-5">Book a launch date</a>
                         </div>

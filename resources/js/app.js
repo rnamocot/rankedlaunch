@@ -551,3 +551,29 @@ document.querySelectorAll('[data-chat]').forEach((root) => {
         showError('');
     });
 });
+
+// Times in the visitor's own zone: <time data-local-time="time|day|daytime" datetime="ISO">
+document.querySelectorAll('[data-local-time]').forEach((el) => {
+    const date = new Date(el.getAttribute('datetime'));
+    if (Number.isNaN(date.getTime())) return;
+    const formats = {
+        time: { hour: 'numeric', minute: '2-digit' },
+        day: { weekday: 'long', month: 'short', day: 'numeric' },
+        daytime: { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' },
+    };
+    const text = date.toLocaleString([], formats[el.dataset.localTime] || formats.time);
+    el.textContent = el.hasAttribute('data-local-suffix') && el.dataset.localTime !== 'day' ? `${text} your time` : text;
+});
+
+// Remember a signed-in maker's time zone so emails can use it (sent once, when it changes).
+(() => {
+    const body = document.body;
+    if (!body.dataset.tzUrl) return;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!tz || tz === body.dataset.userTz) return;
+    fetch(body.dataset.tzUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content },
+        body: JSON.stringify({ timezone: tz }),
+    }).catch(() => {});
+})();

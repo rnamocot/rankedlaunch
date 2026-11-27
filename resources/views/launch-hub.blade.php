@@ -34,7 +34,7 @@
             [
                 'Launch day',
                 $launchDay
-                    ? ($live && ! $dayOver ? 'You’re live today. Share your page and collect votes.' : ($dayOver ? 'Launched '.$launchDay->format('M j') : 'Goes live at 00:00 UTC on '.$launchDay->format('M j').($daysUntilLaunch > 0 ? " · in {$daysUntilLaunch} ".Str::plural('day', $daysUntilLaunch) : '')))
+                    ? ($live && ! $dayOver ? 'You’re live today. Share your page and collect votes.' : ($dayOver ? 'Launched '.$launchDay->format('M j') : 'Goes live on '.$launchDay->format('M j').($daysUntilLaunch > 0 ? " · in {$daysUntilLaunch} ".Str::plural('day', $daysUntilLaunch) : '')))
                     : 'Not scheduled yet',
                 $dayOver ? 'done' : ($live ? 'current' : 'upcoming'),
             ],
@@ -98,7 +98,7 @@
                     <p class="mt-2 text-[2.25rem] font-bold tabular-nums tracking-[-0.03em]" data-countdown="{{ $launchDay->copy()->startOfDay()->utc()->toIso8601String() }}" data-countdown-days>
                         {{ $daysUntilLaunch }} {{ Str::plural('day', $daysUntilLaunch) }}
                     </p>
-                    <p class="mt-1 text-sm text-ink-2">{{ $launchDay->format('l, F j') }} · 00:00 UTC</p>
+                    <p class="mt-1 text-sm text-ink-2">{{ $launchDay->format('l, F j') }} · <x-local-time :at="\Illuminate\Support\Carbon::parse($launchDay->toDateString(), 'UTC')" /></p>
                     @if ($canReschedule)
                         <a href="{{ route('launch.date', $product) }}" class="mt-3 inline-block text-sm font-medium text-ink underline underline-offset-4">Change launch date</a>
                     @endif

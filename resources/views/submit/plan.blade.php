@@ -44,7 +44,7 @@
 
                 <div data-date-picker class="mt-4">
                     <div class="card p-4 sm:p-5">
-                        <p class="mb-4 text-xs text-ink-2">Launches go live at 00:00 UTC. Greyed-out days are full for the plan you pick below.</p>
+                        <p class="mb-4 text-xs text-ink-2">Launches go live at <x-local-time :at="today('UTC')->addDay()" />. Greyed-out days are full for the plan you pick below.</p>
                         @foreach ($months as $month => $list)
                             <p class="mb-3 text-sm font-semibold {{ ! $loop->first ? 'mt-6' : '' }}">{{ $month }}</p>
                             <div class="grid grid-cols-4 gap-2 sm:grid-cols-7">

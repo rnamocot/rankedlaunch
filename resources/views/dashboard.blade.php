@@ -2,7 +2,7 @@
     @php
         $user = auth()->user();
         $sections = [
-            'live' => ['Live today', 'Voting closes at midnight UTC. Share your page now.'],
+            'live' => ['Live today', 'Share your page now: early votes count most.'],
             'action' => ['Needs your attention', 'Finish these to get them on the board.'],
             'upcoming' => ['Upcoming launches', 'Booked and waiting for launch day.'],
             'past' => ['Past launches', 'Your pages, backlinks and badges stay up.'],
@@ -170,7 +170,7 @@
                 <section class="card p-5" data-reveal>
                     <x-icon name="send" :size="20" />
                     <p class="mt-3 text-sm font-semibold">Launch tip</p>
-                    <p class="mt-1 text-sm leading-relaxed text-ink-2">Most votes come in the first 3 hours. Post your launch on X and LinkedIn right after 00:00 UTC, and tell your users the day before.</p>
+                    <p class="mt-1 text-sm leading-relaxed text-ink-2">Most votes come in the first 3 hours. Post your launch on X and LinkedIn right after it goes live at <x-local-time :at="today('UTC')->addDay()" />, and tell your users the day before.</p>
                 </section>
             </aside>
         </div>

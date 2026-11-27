@@ -117,4 +117,24 @@ class LaunchEmailsTest extends TestCase
         $draft = $this->product();
         $this->get("/og/{$draft->slug}.png")->assertNotFound();
     }
+
+    public function test_emails_show_launch_time_in_the_makers_time_zone(): void
+    {
+        $maker = User::factory()->create(['timezone' => 'Asia/Manila']);
+        $p = $this->product(['status' => 'approved', 'launch_date' => today()->addDay()], $maker);
+
+        $html = (new LaunchEmail($p, 'tomorrow'))->render();
+        $this->assertStringContainsString('8:00 AM (Manila time)', $html);
+
+        $noZone = $this->product(['status' => 'approved', 'launch_date' => today()->addDay()]);
+        $this->assertStringContainsString('00:00 UTC', (new LaunchEmail($noZone, 'tomorrow'))->render());
+    }
+
+    public function test_browser_time_zone_is_saved_for_signed_in_makers(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user)->postJson('/account/timezone', ['timezone' => 'Asia/Manila'])->assertNoContent();
+        $this->assertSame('Asia/Manila', $user->fresh()->timezone);
+        $this->actingAs($user)->postJson('/account/timezone', ['timezone' => 'Mars/Base'])->assertStatus(422);
+    }
 }

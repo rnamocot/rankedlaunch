@@ -34,6 +34,17 @@ class AccountController extends Controller
         return back()->with('status', 'Profile saved.');
     }
 
+    /** Called quietly by the browser so emails can show launch times in the maker's own time zone. */
+    public function timezone(Request $request)
+    {
+        $tz = (string) $request->input('timezone');
+        abort_unless(in_array($tz, timezone_identifiers_list(), true), 422);
+
+        $request->user()->forceFill(['timezone' => $tz])->save();
+
+        return response()->noContent();
+    }
+
     public function password(Request $request)
     {
         $user = $request->user();

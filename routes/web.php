@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/account', [\App\Http\Controllers\AccountController::class, 'edit'])->name('account');
     Route::put('/account', [\App\Http\Controllers\AccountController::class, 'update'])->name('account.update');
     Route::put('/account/password', [\App\Http\Controllers\AccountController::class, 'password'])->middleware('throttle:6,1')->name('account.password');
+    Route::post('/account/timezone', [\App\Http\Controllers\AccountController::class, 'timezone'])->middleware('throttle:10,1')->name('account.timezone');
 
     Route::post('/apps/{product}/vote', [VoteController::class, 'toggle'])->middleware('throttle:60,1')->name('vote');
 

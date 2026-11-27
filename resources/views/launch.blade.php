@@ -69,7 +69,7 @@
                 ['Submit in two minutes', 'Name, link, tagline, logo. Screenshots if you have them.'],
                 ['List now or pick a day', 'Already live? Go on today’s board. Launching soon? Choose any open day. Both are free.'],
                 ['We review it', 'A real person checks every listing, usually within 24 hours. Spam never makes the board.'],
-                ['Launch day', 'You go live at 00:00 UTC. Share your page, collect votes, climb the ranks.'],
+                ['Launch day', 'You go live at the start of your launch day. Share your page, collect votes, climb the ranks.'],
                 ['Keep the results', 'Your page, backlink and badge stay up for good. The stats keep counting.'],
             ] as $i => [$title, $text])
                 <li class="list-row flex gap-4 px-5 py-4" style="--inset: 4rem">

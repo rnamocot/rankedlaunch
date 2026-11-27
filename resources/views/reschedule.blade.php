@@ -12,7 +12,7 @@
             <h1 class="large-title">Change launch date</h1>
             <p class="mt-3 text-ink-2">
                 {{ $product->name }} launches <span class="font-semibold text-ink">{{ $product->launch_date->format('l, M j') }}</span> on the {{ $planName }} plan.
-                Pick any open day, or today to go live now. Launches go live at 00:00 UTC.
+                Pick any open day, or today to go live now. Launches go live at <x-local-time :at="today('UTC')->addDay()" />.
             </p>
         </div>
 
