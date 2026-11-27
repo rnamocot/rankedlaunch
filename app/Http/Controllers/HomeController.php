@@ -30,4 +30,25 @@ class HomeController extends Controller
 
         return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories'));
     }
+
+    /** Today's top launches for the homepage banner, refreshed by the browser every ~20s. */
+    public function liveToday()
+    {
+        $top = \Illuminate\Support\Facades\Cache::remember('live-today', 10, fn () => Product::live()
+            ->whereDate('launch_date', today())
+            ->ranked()
+            ->limit(4)
+            ->get()
+            ->map(fn (Product $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'tagline' => $p->tagline,
+                'logo' => $p->logoUrl(),
+                'url' => route('product', $p),
+                'votes' => $p->votes_count,
+            ])
+            ->all());
+
+        return response()->json(['top' => $top])->header('Cache-Control', 'no-store');
+    }
 }

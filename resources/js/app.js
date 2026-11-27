@@ -258,3 +258,74 @@ document.addEventListener('keydown', (event) => {
     if (field) field.focus();
     else window.location.href = '/discover';
 });
+
+// Homepage banner with real data: poll today's top 4 and animate rank changes.
+document.querySelectorAll('[data-rank-live]').forEach((board) => {
+    const ROW = Number(board.dataset.rowRem || 3.5);
+    const src = board.dataset.src;
+    const rowsEl = board.querySelector('[data-rows]');
+    let timer;
+
+    const rows = () => [...rowsEl.querySelectorAll('[data-row]')];
+
+    const tick = (el, value) => {
+        const count = el.querySelector('[data-count]');
+        if (count.textContent === String(value)) return;
+        count.textContent = value;
+        count.classList.remove('is-ticking');
+        void count.offsetWidth;
+        count.classList.add('is-ticking');
+    };
+
+    const apply = (top) => {
+        const current = rows();
+        const known = new Map(current.map((el) => [Number(el.dataset.row), el]));
+        const incomingIds = new Set(top.map((p) => p.id));
+        // Rows whose product dropped out of the top 4 get reused for newcomers.
+        const spare = current.filter((el) => !incomingIds.has(Number(el.dataset.row)));
+
+        top.forEach((p, i) => {
+            let el = known.get(p.id);
+            if (!el) {
+                el = spare.shift();
+                if (!el) return; // board shows a fixed number of rows
+                el.dataset.row = p.id;
+                el.href = p.url;
+                el.querySelector('[data-name]').textContent = p.name;
+                el.querySelector('[data-tagline]').textContent = p.tagline;
+                el.querySelector('[data-logo]').src = p.logo;
+            }
+            el.dataset.votes = p.votes;
+            tick(el, p.votes);
+            el.style.transform = `translateY(${i * ROW}rem)`;
+            const rank = el.querySelector('[data-rank]');
+            rank.textContent = i + 1;
+            rank.classList.toggle('text-ink', i < 3);
+            rank.classList.toggle('text-ink-2', i >= 3);
+        });
+    };
+
+    const poll = async () => {
+        if (document.hidden) return;
+        try {
+            const response = await fetch(src, { headers: { Accept: 'application/json' } });
+            if (response.ok) apply((await response.json()).top || []);
+        } catch {
+            /* offline: keep what's shown */
+        }
+    };
+
+    // Only poll while the banner is on screen.
+    new IntersectionObserver(([entry]) => {
+        clearInterval(timer);
+        if (entry.isIntersecting) {
+            poll();
+            timer = setInterval(poll, 20000);
+        }
+    }).observe(board);
+
+    // Your own vote shows up right away, without waiting for the next poll.
+    document.addEventListener('click', (event) => {
+        if (event.target.closest('[data-vote]')) setTimeout(poll, 600);
+    });
+});

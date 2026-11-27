@@ -14,10 +14,10 @@
 <div {{ $attributes->merge(['class' => 'tray mx-auto w-full max-w-md text-left']) }} data-rank-demo aria-hidden="true">
     <div class="flex items-center justify-between px-3 pt-1.5 pb-2.5">
         <span class="flex items-center gap-2 text-xs font-semibold">
-            <span class="size-2 rounded-full bg-ink"></span>
-            Live ranking
+            <span class="size-2 rounded-full bg-ink-3"></span>
+            How ranking works
         </span>
-        <span class="text-xs text-ink-2">Today</span>
+        <span class="text-xs text-ink-2">Example</span>
     </div>
     <div class="card relative overflow-hidden" style="height: {{ count($rows) * 3.5 }}rem">
         @foreach ($rows as $i => $row)

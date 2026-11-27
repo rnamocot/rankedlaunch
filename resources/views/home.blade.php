@@ -33,7 +33,12 @@
             </a>
             <p class="text-sm text-ink-2">Free to launch. No card needed.</p>
         </div>
-        <x-rank-demo class="mt-12" />
+        {{-- Real top 4 once there's enough to rank; otherwise an honest "how it works" demo --}}
+        @if ($today->count() >= 3)
+            <x-live-ranking :products="$today->take(4)" class="mt-12" />
+        @else
+            <x-rank-demo class="mt-12" />
+        @endif
     </section>
     </div>
 

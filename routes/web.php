@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 // Public
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/live/today.json', [HomeController::class, 'liveToday'])->middleware('throttle:60,1')->name('live.today');
 Route::get('/rankings/{period?}', [RankingController::class, 'show'])->name('rankings');
 Route::get('/category/{category}', [CategoryController::class, 'show'])->name('category');
 Route::get('/apps/{product}', [ProductController::class, 'show'])->name('product');
