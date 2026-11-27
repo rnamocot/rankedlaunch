@@ -38,14 +38,14 @@ class LemonSqueezy
                     'attributes' => [
                         // Charge what we quoted (handles the launch-offer price).
                         'custom_price' => $payment->amount,
-                        'checkout_data' => [
-                            'email' => $product->user->email,
+                        'checkout_data' => array_filter([
+                            'email' => $product->user->deliverableEmail(),
                             'name' => $product->user->name,
                             'custom' => [
                                 'payment_id' => (string) $payment->id,
                                 'product_id' => (string) $product->id,
                             ],
-                        ],
+                        ]),
                         'product_options' => [
                             'redirect_url' => route('launch.hub', ['product' => $product, 'paid' => 1]),
                         ],

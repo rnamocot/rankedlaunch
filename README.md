@@ -29,8 +29,12 @@ All settings are documented in `.env.example`:
 
 ## Production (Hostinger)
 
-- Point the domain's document root at `/public` and set `APP_ENV=production` and `APP_DEBUG=false`.
-- Run `php artisan migrate --force` and `php artisan db:seed --class=CategorySeeder --force`.
+Built CSS/JS (`public/build`) is committed, because shared hosting can't run Node. Run `npm run build` before every commit that changes styles or scripts.
+
+- Point the domain at the app's `public` folder and set `APP_ENV=production` and `APP_DEBUG=false`.
+- First install: `composer install --no-dev`, `php artisan key:generate`, `php artisan migrate --force`, `php artisan db:seed --force` (categories only in production), `php artisan storage:link`.
+- Admin: sign up on the site, then run `php artisan rankedlaunch:make-admin you@example.com`.
 - Add a cron job: `* * * * * php /path/to/artisan schedule:run`.
 - Create the payment webhook: `https://rankedlaunch.com/webhooks/polar` for the `order.paid` event.
+- Updates after that: `git push`, then on the server run `bash deploy.sh`.
 - Admin dashboard: `/admin`. The System page shows anything that still needs setting up.

@@ -46,16 +46,17 @@ class Polar
     {
         $response = Http::withToken(config('rankedlaunch.polar.access_token'))
             ->acceptJson()
-            ->post($this->baseUrl().'/v1/checkouts/', [
+            ->post($this->baseUrl().'/v1/checkouts/', array_filter([
                 'products' => [$this->productId($payment)],
                 'success_url' => route('launch.hub', ['product' => $product, 'paid' => 1]),
-                'customer_email' => $product->user->email,
+                // Polar emails the receipt here. Placeholder emails are left out so the buyer types a real one.
+                'customer_email' => $product->user->deliverableEmail(),
                 'customer_name' => $product->user->name,
                 'metadata' => [
                     'payment_id' => (string) $payment->id,
                     'product_id' => (string) $product->id,
                 ],
-            ])
+            ]))
             ->throw();
 
         return $response->json('url');

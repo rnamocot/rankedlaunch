@@ -15,15 +15,17 @@ class DatabaseSeeder extends Seeder
         $this->call(CategorySeeder::class);
         $categories = Category::all()->keyBy('name');
 
+        // Everything below is local demo data. On the live site only categories are seeded;
+        // create your admin by signing up, then: php artisan rankedlaunch:make-admin you@example.com
+        if (! app()->isLocal()) {
+            return;
+        }
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@rankedlaunch.test'],
             ['name' => 'Admin', 'password' => 'password']
         );
         $admin->forceFill(['is_admin' => true, 'email_verified_at' => now()])->save();
-
-        if (! app()->isLocal()) {
-            return; // demo products are for local previews only
-        }
 
         $maker = User::firstOrCreate(
             ['email' => 'maker@rankedlaunch.test'],

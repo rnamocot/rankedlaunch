@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\User;
 use App\Services\LemonSqueezy;
 use App\Services\Polar;
 use App\Services\PlanActivator;
@@ -95,6 +96,8 @@ class CheckoutController extends Controller
             return response('Payment not found', 202);
         }
 
+        $this->adoptCheckoutEmail($payment, $request->json('data.customer.email') ?? $request->json('data.customer_email'));
+
         if ($payment->status !== 'paid') {
             $this->markPaid($payment, $activator, [
                 'provider' => 'polar',
@@ -106,6 +109,23 @@ class CheckoutController extends Controller
         }
 
         return response('OK', 202);
+    }
+
+    /**
+     * X sign-ins may only have a placeholder email. If they typed a real one at
+     * checkout, save it so launch emails reach them (unless another account uses it).
+     */
+    private function adoptCheckoutEmail(Payment $payment, ?string $email): void
+    {
+        $user = $payment->user;
+
+        if (! $user || $user->deliverableEmail() || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return;
+        }
+
+        if (! User::where('email', $email)->exists()) {
+            $user->forceFill(['email' => $email])->save();
+        }
     }
 
     private function markPaid(Payment $payment, PlanActivator $activator, array $attributes): void

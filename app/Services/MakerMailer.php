@@ -14,10 +14,9 @@ class MakerMailer
 {
     public function send(Product $product, string $type): bool
     {
-        $email = $product->user?->email;
-
         // X sign-ins without an email get a placeholder address we can't deliver to.
-        if (! $email || Str::endsWith($email, '@users.rankedlaunch.com')) {
+        $email = $product->user?->deliverableEmail();
+        if (! $email) {
             return false;
         }
 

@@ -39,7 +39,7 @@ class SocialAuthController extends Controller
         }
 
         // X does not always return an email; fall back to a stable placeholder.
-        $email = $social->getEmail() ?: "{$provider}_{$social->getId()}@users.rankedlaunch.com";
+        $email = $social->getEmail() ?: "{$provider}_{$social->getId()}".User::PLACEHOLDER_DOMAIN;
 
         $user = User::where('provider', $provider)->where('provider_id', $social->getId())->first()
             ?? User::where('email', $email)->first();
