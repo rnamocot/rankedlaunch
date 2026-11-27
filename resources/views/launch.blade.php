@@ -12,7 +12,7 @@
         </p>
         <div class="mt-8 flex flex-wrap justify-center gap-2.5">
             <a href="{{ route('submit') }}" class="btn btn-primary btn-lg">Launch your product <x-icon name="arrow-right" :size="16" :stroke="2" /></a>
-            <a href="{{ route('pricing') }}" class="btn btn-outline btn-lg">See pricing</a>
+            <a href="{{ route('how-it-works') }}" class="btn btn-outline btn-lg">How launches work</a>
         </div>
         <p class="mt-5 text-sm text-ink-2">
             Already live? <span class="font-semibold text-ink">List it today.</span> Launching soon? <span class="font-semibold text-ink">Pick any day, free.</span>
@@ -48,7 +48,7 @@
                 ['users', 'Early users who try things', 'Your launch sits on the homepage, in daily and weekly rankings, and in its category, where makers and early adopters browse.'],
                 ['link', 'A backlink that lasts', 'Paid launches get a dofollow link from a page Google indexes. It helps your domain authority long after launch day.'],
                 ['search', 'A page that ranks', 'Your product page has clean SEO, structured data and a fast load. People searching for your product name or category find it.'],
-                ['medal', 'Proof you can show', 'Finish in the top 3 and get a “#1 Product of the Day” or “of the Week” badge for your site. Social proof that converts.'],
+                ['medal', 'Proof you can show', 'Finish top 5 of the day, week, month or year and get a “Product of the Day / Week / Month / Year” badge for your site. Social proof that converts.'],
                 ['chart', 'Real launch numbers', 'See page views, clicks to your site, votes and your rank. Know exactly what your launch did.'],
                 ['send', 'A launch-day kit', 'Ready-to-post messages for X and LinkedIn, a launch-day checklist, and where else to share. No guessing.'],
             ] as [$icon, $title, $text])

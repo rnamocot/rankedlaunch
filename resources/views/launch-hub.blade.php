@@ -47,13 +47,8 @@
 
         $shareLive = "{$product->name} is live on RankedLaunch today.\n\n{$product->tagline}\n\nIf you have a second, I'd love your feedback and an upvote:\n{$publicUrl}";
         $sharePre = $launchDay ? "I'm launching {$product->name} on RankedLaunch on {$launchDay->format('l, M j')}.\n\n{$product->tagline}\n\nTake a look: {$product->url}" : null;
-        // Best placement wins: weekly top 3 beats daily top 3.
-        $weekOver = $launchDay && $launchDay->copy()->endOfWeek()->isPast();
-        $winLabel = match (true) {
-            $weekOver && $weeklyRank && $weeklyRank <= 3 => "#{$weeklyRank} Product of the Week",
-            $dayOver && $dailyRank && $dailyRank <= 3 => "#{$dailyRank} Product of the Day",
-            default => null,
-        };
+        // Best award wins: Year > Month > Week > Day, top 5 each (see Product::award()).
+        $winLabel = $product->award()['label'] ?? null;
         $shareWon = $winLabel ? "{$product->name} finished {$winLabel} on RankedLaunch.\n\nThank you to everyone who checked it out and voted.\n{$publicUrl}" : null;
         $shares = array_filter([
             'won' => $shareWon ? ['Share your win: '.$winLabel, $shareWon, $publicUrl] : null,
@@ -123,7 +118,7 @@
                         @endforeach
                     </dl>
                     @if ($weeklyRank)
-                        <p class="mt-3 px-1 text-sm text-ink-2">#{{ $weeklyRank }} this week so far.{{ $weeklyRank > 3 ? ' The top 3 of the week get a winner badge.' : ' You’re in the top 3. Keep sharing to hold your spot.' }}</p>
+                        <p class="mt-3 px-1 text-sm text-ink-2">#{{ $weeklyRank }} this week so far.{{ $weeklyRank > 5 ? ' The top 5 of the week get a winner badge.' : ' You’re in the top 5. Keep sharing to hold your spot.' }}</p>
                     @endif
                 </section>
             @endif
@@ -255,7 +250,7 @@
                     @endif
                 @else
                     <div class="card p-4">
-                        <p class="text-sm text-ink-2">Unlocks on launch day. Finish in the top 3 and it upgrades to a winner badge automatically.</p>
+                        <p class="text-sm text-ink-2">Unlocks on launch day. Finish top 5 of the day, week, month or year and it upgrades to a winner badge automatically.</p>
                     </div>
                 @endif
             </section>

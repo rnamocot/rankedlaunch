@@ -839,3 +839,29 @@ document.querySelectorAll('canvas[data-particles]').forEach((canvas) => {
         resizeTimer = setTimeout(() => { resize(); draw(); }, 150);
     });
 });
+
+// Homepage board: Yesterday / Today / Tomorrow tabs and category filter chips.
+document.querySelectorAll('[data-board]').forEach((board) => {
+    const tabs = board.querySelectorAll('[data-board-tab]');
+    const show = (key) => {
+        tabs.forEach((t) => t.setAttribute('aria-selected', t.dataset.boardTab === key ? 'true' : 'false'));
+        board.querySelectorAll('[data-board-panel]').forEach((p) => (p.hidden = p.dataset.boardPanel !== key));
+        board.querySelectorAll('[data-board-note]').forEach((n) => (n.hidden = n.dataset.boardNote !== key));
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => show(t.dataset.boardTab)));
+
+    const chips = board.querySelectorAll('[data-filter]');
+    const todayPanel = board.querySelector('[data-board-panel="today"]');
+    chips.forEach((chip) => chip.addEventListener('click', () => {
+        const slug = chip.dataset.filter;
+        chips.forEach((c) => c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'));
+        let shown = 0;
+        todayPanel.querySelectorAll('li[data-category]').forEach((row) => {
+            const match = !slug || row.dataset.category === slug;
+            row.hidden = !match;
+            if (match) shown++;
+        });
+        const empty = todayPanel.querySelector('[data-board-empty]');
+        if (empty) empty.hidden = shown > 0;
+    }));
+});

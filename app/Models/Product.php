@@ -215,6 +215,56 @@ class Product extends Model
             ->count() + 1;
     }
 
+    /** Places that earn an award (badge, share image, email) in each period. */
+    public const AWARD_TOP = 5;
+
+    /** Rank among live products launched between $from and $to (1-based), or null if not live. */
+    public function rankBetween(Carbon $from, Carbon $to): ?int
+    {
+        if (! $this->isLive()) {
+            return null;
+        }
+
+        return static::launchedBetween($from, $to)
+            ->where(function ($q) {
+                $q->where('votes_count', '>', $this->votes_count)
+                    ->orWhere(fn ($q) => $q->where('votes_count', $this->votes_count)->where('id', '<', $this->id));
+            })
+            ->count() + 1;
+    }
+
+    /**
+     * The best award this launch has earned, once its period is over:
+     * Product of the Year > Month > Week > Day, top 5 in each.
+     *
+     * @return array{label: string, period: string, rank: int}|null
+     */
+    public function award(): ?array
+    {
+        if (! $this->isLive()) {
+            return null;
+        }
+
+        $d = $this->launch_date;
+        $periods = [
+            'Year' => [$d->copy()->startOfYear(), $d->copy()->endOfYear()],
+            'Month' => [$d->copy()->startOfMonth(), $d->copy()->endOfMonth()],
+            'Week' => [$d->copy()->startOfWeek(), $d->copy()->endOfWeek()],
+            'Day' => [$d->copy()->startOfDay(), $d->copy()->endOfDay()],
+        ];
+
+        foreach ($periods as $period => [$from, $to]) {
+            if ($to->isPast()) {
+                $rank = $this->rankBetween($from, $to);
+                if ($rank && $rank <= self::AWARD_TOP) {
+                    return ['label' => "#{$rank} Product of the {$period}", 'period' => strtolower($period), 'rank' => $rank];
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function pricingLabel(): string
     {
         return self::PRICING_TYPES[$this->pricing_type] ?? ucfirst($this->pricing_type);

@@ -75,15 +75,9 @@ class BadgeController extends Controller
     /** [eyebrow, title] for the badge, based on how the launch placed. */
     public static function lines(Product $product): array
     {
-        $weekly = $product->weeklyRank();
-        $daily = $product->dailyRank();
-        $weekOver = $product->launch_date->copy()->endOfWeek()->isPast();
+        $award = $product->award();
 
-        return match (true) {
-            $weekOver && $weekly <= 3 => ['RANKEDLAUNCH', "#{$weekly} Product of the Week"],
-            $daily <= 3 && $product->launch_date->lt(today()) => ['RANKEDLAUNCH', "#{$daily} Product of the Day"],
-            default => ['LAUNCHED ON', 'RankedLaunch'],
-        };
+        return $award ? ['RANKEDLAUNCH', $award['label']] : ['LAUNCHED ON', 'RankedLaunch'];
     }
 
     private function theme(Request $request): string

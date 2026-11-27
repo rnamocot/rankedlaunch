@@ -29,6 +29,7 @@ Route::get('/apps/{product}/alternatives', [\App\Http\Controllers\DiscoverContro
 Route::get('/discover', [\App\Http\Controllers\DiscoverController::class, 'index'])->name('discover');
 Route::get('/pricing', fn (\App\Services\Pricing $pricing) => view('pricing', ['plans' => config('rankedlaunch.plans'), 'pricing' => $pricing]))->name('pricing');
 Route::get('/launch', [\App\Http\Controllers\MakersController::class, 'index'])->name('launch');
+Route::view('/how-it-works', 'how-it-works')->name('how-it-works');
 Route::post('/apps/{product}/click', [ProductController::class, 'click'])->middleware('throttle:30,1')->name('click');
 Route::get('/og.png', [\App\Http\Controllers\ShareImageController::class, 'site'])->name('og.site');
 Route::get('/og/{product}.png', [\App\Http\Controllers\ShareImageController::class, 'product'])->name('og.product');

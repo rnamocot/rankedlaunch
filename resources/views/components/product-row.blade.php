@@ -1,5 +1,5 @@
 @props(['product', 'rank' => null, 'votedIds' => [], 'pinned' => false])
-<li class="list-row group" style="--inset: {{ $rank ? '7.25rem' : '5rem' }}">
+<li class="list-row group" data-category="{{ $product->category?->slug }}" style="--inset: {{ $rank ? '7.25rem' : '5rem' }}">
     <div class="flex items-center gap-4 px-4 py-3.5 sm:px-5">
         @if ($rank)
             <span class="w-6 shrink-0 text-right text-[0.9375rem] font-semibold tabular-nums {{ $rank <= 3 ? 'text-ink' : 'text-ink-2' }}">{{ $rank }}</span>

@@ -62,17 +62,8 @@ class ShareImage
             return [null, $product->launch_date ? 'Launching '.$product->launch_date->format('M j, Y').' on RankedLaunch' : 'Coming soon to RankedLaunch'];
         }
 
-        $daily = $product->dailyRank();
-        $weekly = $product->weeklyRank();
-        $weekOver = $product->launch_date->copy()->endOfWeek()->isPast();
         $dayOver = $product->launch_date->lt(today());
-
-        $eyebrow = match (true) {
-            $weekOver && $weekly <= 3 => "#{$weekly} Product of the Week",
-            $dayOver && $daily <= 3 => "#{$daily} Product of the Day",
-            ! $dayOver => 'Launching today',
-            default => null,
-        };
+        $eyebrow = $product->award()['label'] ?? (! $dayOver ? 'Launching today' : null);
 
         $votes = number_format($product->votes_count).' '.Str::plural('upvote', $product->votes_count);
 

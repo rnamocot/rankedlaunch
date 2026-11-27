@@ -29,7 +29,7 @@ class Intelligence
         $paid = (clone $products)->where('plan', '!=', 'free')->whereIn('status', ['pending', 'approved'])->count();
         $approved = (clone $products)->where('status', 'approved')->count();
         $liveProducts = (clone $products)->live()->get();
-        $top3 = $liveProducts->filter(fn (Product $p) => $p->launch_date->lt(today()) && $p->dailyRank() <= 3)->count();
+        $top3 = $liveProducts->filter(fn (Product $p) => $p->launch_date->lt(today()) && $p->dailyRank() <= Product::AWARD_TOP)->count();
 
         return [
             'days' => $days,
@@ -39,7 +39,7 @@ class Intelligence
                 ['Booked', $booked, 'Picked a plan and date'],
                 ['Approved', $approved, 'Passed review'],
                 ['Live', $liveProducts->count(), 'Launch day reached'],
-                ['Top 3', $top3, 'Finished top 3 of the day'],
+                ['Top 5', $top3, 'Finished top 5 of the day'],
             ],
             'split' => ['free' => max(0, $booked - $paid), 'paid' => $paid],
         ];

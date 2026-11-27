@@ -6,7 +6,7 @@
         'Is it really one-time?' => 'Yes. You pay once per launch. No renewals, no subscription.',
         'Can my product get rejected?' => 'Only if it’s broken, spam, or not a real product. If a paid launch is rejected, we refund it in full.',
         'Does paying get me a higher rank?' => 'No. Rankings are by votes only, for every plan. That’s what makes a “#1 Product of the Day” badge worth something. Paid plans buy your launch date, a dofollow backlink and visibility: Pro launches are featured on the homepage (in a fair rotation, first on launch day), pinned at the top of their category, and labelled “Featured”.',
-        'How do rankings work?' => 'Products are ranked by upvotes against everything launching the same day and week. The top 3 get a winner badge for their site.',
+        'How do rankings work?' => 'Products are ranked by upvotes against everything launching the same day and week. The top 5 of each day, week, month and year get a winner badge for their site.',
     ])
     @if (! $paymentsAvailable)
         {{-- Free early access: only free plan, no paid FAQs --}}

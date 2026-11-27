@@ -19,7 +19,7 @@
 @endphp
 <div {{ $attributes->merge(['class' => 'card p-4']) }}>
     <p class="text-sm font-semibold">{{ $eyebrow === 'RANKEDLAUNCH' ? $title : 'Launched on RankedLaunch' }}</p>
-    <p class="mt-0.5 text-xs leading-relaxed text-ink-2">Updates itself if you finish top 3 of the day or week.</p>
+    <p class="mt-0.5 text-xs leading-relaxed text-ink-2">Updates itself if you finish top 5 of the day, week, month or year.</p>
 
     @foreach ($themes as $theme => $label)
         <div class="mt-4">

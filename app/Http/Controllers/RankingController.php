@@ -10,6 +10,7 @@ class RankingController extends Controller
         'today' => 'Today',
         'week' => 'This week',
         'month' => 'This month',
+        'year' => 'This year',
         'all-time' => 'All time',
     ];
 
@@ -21,6 +22,7 @@ class RankingController extends Controller
             'today' => Product::live()->whereDate('launch_date', today()),
             'week' => Product::launchedBetween(today()->startOfWeek(), today()),
             'month' => Product::launchedBetween(today()->startOfMonth(), today()),
+            'year' => Product::launchedBetween(today()->startOfYear(), today()),
             'all-time' => Product::live(),
         };
 

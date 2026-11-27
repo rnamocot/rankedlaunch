@@ -213,7 +213,7 @@
                     <div class="card space-y-4 p-5 text-sm leading-relaxed text-ink-2">
                         <p><span class="font-semibold text-ink">Go early.</span> Most votes come in the first 3 hours. Post on X and LinkedIn right after you go live at <x-local-time :at="today('UTC')->addDay()" />.</p>
                         <p><span class="font-semibold text-ink">Tell your users the day before.</span> A short email or post with your launch link does more than any ad.</p>
-                        <p><span class="font-semibold text-ink">Add your badge.</span> It upgrades itself if you finish top 3 and sends visitors back to your page.</p>
+                        <p><span class="font-semibold text-ink">Add your badge.</span> It upgrades itself if you finish top 5 and sends visitors back to your page.</p>
                     </div>
                 </section>
             </div>

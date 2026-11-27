@@ -63,30 +63,91 @@
     {{-- Showcase: today's board inside a tray --}}
     <section class="mx-auto max-w-6xl px-4 sm:px-6">
         <div class="tray" data-reveal>
+            @php($boardCategories = $today->pluck('category')->filter()->unique('id')->sortBy('name')->values())
+            <div data-board class="contents">
             <div class="flex flex-wrap items-center justify-between gap-3 px-3 pt-2 pb-3 sm:px-4">
-                <div class="flex items-center gap-2.5">
-                    <x-logo :size="22" :wordmark="false" class="text-ink" />
-                    <span class="text-sm font-semibold">Launching today</span>
-                    <span class="text-sm text-ink-3">{{ now()->format('M j') }}</span>
+                <div class="segmented" role="tablist" aria-label="Launch day">
+                    @foreach (['yesterday' => 'Yesterday', 'today' => 'Today', 'tomorrow' => 'Tomorrow'] as $key => $label)
+                        <button type="button" role="tab" data-board-tab="{{ $key }}" aria-selected="{{ $key === 'today' ? 'true' : 'false' }}"
+                                class="rounded-lg px-3.5 py-1.5 text-[0.8125rem] font-medium aria-selected:bg-surface aria-selected:font-semibold aria-selected:text-ink aria-selected:shadow-sm aria-[selected=false]:text-ink-2">
+                            {{ $label }}
+                            @if ($key === 'tomorrow' && $tomorrow->isNotEmpty())<span class="tabular-nums text-ink-3">{{ $tomorrow->count() }}</span>@endif
+                        </button>
+                    @endforeach
                 </div>
-                <span class="text-[0.8125rem] text-ink-2">Voting closes in <span class="font-semibold tabular-nums text-ink" data-countdown="{{ today('UTC')->addDay()->toIso8601String() }}">--:--:--</span></span>
+                <span class="text-[0.8125rem] text-ink-2" data-board-note="today">Voting closes in <span class="font-semibold tabular-nums text-ink" data-countdown="{{ today('UTC')->addDay()->toIso8601String() }}">--:--:--</span></span>
+                <span class="text-[0.8125rem] text-ink-2" data-board-note="yesterday" hidden>Final ranking · {{ today()->subDay()->format('l, M j') }}</span>
+                <span class="text-[0.8125rem] text-ink-2" data-board-note="tomorrow" hidden>Goes live at <x-local-time :at="today('UTC')->addDay()" /></span>
             </div>
+
+            @if ($boardCategories->count() > 1)
+                <div class="-mx-0 flex gap-1.5 overflow-x-auto px-3 pb-3 sm:px-4" data-board-filters data-board-note="today" aria-label="Filter by category">
+                    <button type="button" data-filter="" aria-pressed="true" class="chip !h-8 shrink-0 !pl-3 !text-xs aria-pressed:!bg-ink aria-pressed:!text-on-ink">All <span class="tabular-nums opacity-60">{{ $today->count() }}</span></button>
+                    @foreach ($boardCategories as $c)
+                        <button type="button" data-filter="{{ $c->slug }}" aria-pressed="false" class="chip !h-8 shrink-0 !pl-3 !text-xs aria-pressed:!bg-ink aria-pressed:!text-on-ink">{{ $c->name }} <span class="tabular-nums opacity-60">{{ $today->where('category_id', $c->id)->count() }}</span></button>
+                    @endforeach
+                </div>
+            @endif
 
             <div class="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,1fr)_19rem]">
                 <div class="card overflow-hidden">
-                    @if ($today->isNotEmpty())
-                        <ol>
-                            @foreach ($today as $i => $product)
-                                <x-product-row :product="$product" :rank="$i + 1" :voted-ids="$votedIds" />
-                            @endforeach
-                        </ol>
-                    @else
-                        <div class="px-6 py-16 text-center">
-                            <p class="font-semibold">New launches go live at <x-local-time :at="today('UTC')->addDay()" /></p>
-                            <p class="mt-1 text-sm text-ink-2">Want to be first in line tomorrow?</p>
-                            <a href="{{ route('submit') }}" class="btn btn-primary btn-sm mt-5">Book a launch date</a>
-                        </div>
-                    @endif
+                    {{-- Today --}}
+                    <div data-board-panel="today">
+                        @if ($today->isNotEmpty())
+                            <ol>
+                                @foreach ($today as $i => $product)
+                                    <x-product-row :product="$product" :rank="$i + 1" :voted-ids="$votedIds" />
+                                @endforeach
+                            </ol>
+                            <p data-board-empty hidden class="px-6 py-10 text-center text-sm text-ink-2">No launches in this category today.</p>
+                        @else
+                            <div class="px-6 py-16 text-center">
+                                <p class="font-semibold">New launches go live at <x-local-time :at="today('UTC')->addDay()" /></p>
+                                <p class="mt-1 text-sm text-ink-2">Want to be first in line tomorrow?</p>
+                                <a href="{{ route('submit') }}" class="btn btn-primary btn-sm mt-5">Book a launch date</a>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Yesterday: final ranking --}}
+                    <div data-board-panel="yesterday" hidden>
+                        @if ($yesterday->isNotEmpty())
+                            <ol>
+                                @foreach ($yesterday as $i => $product)
+                                    <x-product-row :product="$product" :rank="$i + 1" :voted-ids="$votedIds" />
+                                @endforeach
+                            </ol>
+                            <a href="{{ route('rankings', 'week') }}" class="block border-t border-line px-5 py-3 text-center text-sm font-medium text-ink-2 hover:text-ink">Full results this week</a>
+                        @else
+                            <p class="px-6 py-14 text-center text-sm text-ink-2">No launches yesterday.</p>
+                        @endif
+                    </div>
+
+                    {{-- Tomorrow: lineup teaser (pages go live with the launch) --}}
+                    <div data-board-panel="tomorrow" hidden>
+                        @if ($tomorrow->isNotEmpty())
+                            <p class="border-b border-line px-5 py-3 text-sm text-ink-2"><span class="font-semibold text-ink">{{ $tomorrow->count() }} {{ Str::plural('launch', $tomorrow->count()) }}</span> scheduled for {{ today()->addDay()->format('l, M j') }}. Voting opens when they go live.</p>
+                            <ul>
+                                @foreach ($tomorrow as $product)
+                                    <li class="list-row flex items-center gap-4 px-4 py-3.5 sm:px-5" style="--inset: 5rem">
+                                        <span class="app-icon size-12"><img src="{{ $product->logoUrl() }}" alt="" loading="lazy"></span>
+                                        <span class="min-w-0 flex-1">
+                                            <span class="block truncate text-[0.9375rem] font-semibold">{{ $product->name }}</span>
+                                            <span class="block truncate text-sm text-ink-2">{{ $product->tagline }}</span>
+                                            @if ($product->category)<span class="meta mt-1 flex"><span>{{ $product->category->name }}</span></span>@endif
+                                        </span>
+                                        <span class="shrink-0 text-xs font-medium text-ink-2">Tomorrow</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @else
+                            <div class="px-6 py-14 text-center">
+                                <p class="font-semibold">Nothing scheduled for tomorrow yet</p>
+                                <p class="mt-1 text-sm text-ink-2">Pick tomorrow as your launch day and lead the board.</p>
+                                <a href="{{ route('submit') }}" class="btn btn-primary btn-sm mt-5">Launch tomorrow</a>
+                            </div>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="card overflow-hidden">
@@ -111,10 +172,11 @@
                         @endforelse
                     </ol>
                     <div class="m-4 mt-3 rounded-xl bg-fill p-4">
-                        <p class="text-sm font-semibold">Top 3 get a winner badge</p>
-                        <p class="mt-1 text-xs leading-relaxed text-ink-2">Weekly winners get “#1 Product of the Week” for their site.</p>
+                        <p class="text-sm font-semibold">Top 5 get a winner badge</p>
+                        <p class="mt-1 text-xs leading-relaxed text-ink-2">Top 5 of each day, week, month and year earn a badge for their site.</p>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </section>
@@ -157,19 +219,7 @@
             </section>
         @endif
 
-        @if ($yesterday->isNotEmpty())
-            <section>
-                <h2 class="section-title">Yesterday’s winners</h2>
-                <p class="mt-3 text-center text-ink-2">Final ranking from {{ today()->subDay()->format('l, M j') }}.</p>
-                <div class="tray mt-8" data-reveal>
-                    <ol class="card overflow-hidden">
-                        @foreach ($yesterday as $i => $product)
-                            <x-product-row :product="$product" :rank="$i + 1" :voted-ids="$votedIds" />
-                        @endforeach
-                    </ol>
-                </div>
-            </section>
-        @endif
+
     </div>
 
     <div class="mx-auto mt-20 max-w-3xl px-4 sm:px-6">

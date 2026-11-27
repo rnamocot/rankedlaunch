@@ -3,6 +3,7 @@
     <url><loc>{{ route('home') }}</loc><changefreq>hourly</changefreq><priority>1.0</priority></url>
     <url><loc>{{ route('pricing') }}</loc><changefreq>monthly</changefreq></url>
     <url><loc>{{ route('discover') }}</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+    <url><loc>{{ route('how-it-works') }}</loc><changefreq>monthly</changefreq></url>
     <url><loc>{{ route('launch') }}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
     <url><loc>{{ route('about') }}</loc><changefreq>yearly</changefreq></url>
     <url><loc>{{ route('terms') }}</loc><changefreq>yearly</changefreq></url>

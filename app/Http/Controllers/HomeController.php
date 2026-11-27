@@ -13,8 +13,11 @@ class HomeController extends Controller
 
         $today = Product::live()->whereDate('launch_date', today())->with($with)->ranked()->get();
 
+        // Tomorrow's lineup: approved launches scheduled for tomorrow (shown as a teaser, no links yet).
+        $tomorrow = Product::with($with)->where('status', 'approved')->whereDate('launch_date', today()->addDay())->orderBy('id')->get();
+
         // Before the first launch of the day lands, keep the page useful.
-        $yesterday = Product::live()->whereDate('launch_date', today()->subDay())->with($with)->ranked()->limit(10)->get();
+        $yesterday = Product::live()->whereDate('launch_date', today()->subDay())->with($with)->ranked()->limit(20)->get();
 
         // Fair rotation, launch-day Pro apps first (see Product::featuredRotation).
         $featured = Product::featuredRotation();
@@ -43,7 +46,7 @@ class HomeController extends Controller
             'Makers' => \App\Models\User::has('products')->count(),
         ];
 
-        return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats', 'spotlight'));
+        return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats', 'spotlight', 'tomorrow'));
     }
 
     /**

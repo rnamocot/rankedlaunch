@@ -115,7 +115,7 @@ class LaunchEmail extends Mailable
     {
         $p = $this->product;
         $rank = $p->dailyRank();
-        $won = $rank && $rank <= 3;
+        $won = $rank && $rank <= \App\Models\Product::AWARD_TOP;
 
         return [
             'subject' => $won ? "{$p->name} finished #{$rank} Product of the Day" : "Your launch results for {$p->name}",

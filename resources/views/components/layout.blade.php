@@ -152,6 +152,7 @@
                 <p class="text-sm font-semibold">Makers</p>
                 <ul class="mt-3 space-y-2 text-sm text-ink-2">
                     <li><a class="hover:text-ink" href="{{ route('launch') }}">Why launch here</a></li>
+                    <li><a class="hover:text-ink" href="{{ route('how-it-works') }}">How launches work</a></li>
                     <li><a class="hover:text-ink" href="{{ route('submit') }}">Submit a product</a></li>
                     <li><a class="hover:text-ink" href="{{ route('pricing') }}">Pricing</a></li>
                     <li><a class="hover:text-ink" href="{{ route('dashboard') }}">Dashboard</a></li>
