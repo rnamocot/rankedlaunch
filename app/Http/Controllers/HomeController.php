@@ -30,7 +30,14 @@ class HomeController extends Controller
 
         $pulse = self::pulse();
 
-        return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories', 'pulse'));
+        // Small live numbers beside the hero.
+        $heroStats = [
+            'Launching today' => $today->count(),
+            'Upvotes today' => \App\Models\Vote::where('created_at', '>=', today())->count(),
+            'Makers' => \App\Models\User::has('products')->count(),
+        ];
+
+        return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats'));
     }
 
     /**
@@ -71,7 +78,7 @@ class HomeController extends Controller
             ->with('category')
             ->whereDate('launch_date', today())
             ->ranked()
-            ->limit(4)
+            ->limit(5)
             ->get()
             ->map(fn (Product $p) => [
                 'id' => $p->id,

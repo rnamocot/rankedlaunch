@@ -11,44 +11,52 @@
     </x-slot:head>
     @php($faces = $today->concat($week)->unique('id')->take(4))
 
-    {{-- Hero --}}
+    {{-- Hero: pitch on the left, live rankings dashboard on the right --}}
     <div class="relative isolate">
         <x-hero-backdrop />
-    <section class="intro mx-auto max-w-4xl px-4 pt-20 pb-12 text-center sm:px-6 sm:pt-24">
-        <h1 class="display">Launch your product.<br><span class="text-ink-3">Climb the ranks.</span></h1>
-        <p class="mx-auto mt-6 max-w-xl text-[1.125rem] leading-relaxed text-ink-2">
-            A daily launch board where makers get early users, a backlink that lasts, and a badge to prove it.
-        </p>
-        <div class="mt-9 flex flex-col items-center gap-3">
-            <a href="{{ route('submit') }}" class="btn btn-primary btn-lg !h-[3.25rem] max-w-full min-[380px]:!pl-2.5 !pr-5">
-                @if ($faces->isNotEmpty())
-                    <span class="hidden -space-x-2 min-[380px]:flex">
-                        @foreach ($faces as $face)
-                            <span class="app-icon size-8 !rounded-[0.55rem] ring-2 ring-[#2a2a2c]"><img src="{{ $face->logoUrl() }}" alt=""></span>
-                        @endforeach
-                    </span>
-                @endif
-                <span class="ml-1">Launch your product</span>
-                <x-icon name="arrow-right" :size="16" :stroke="2" />
-            </a>
-            <p class="text-sm text-ink-2">Free to launch. No card needed.</p>
-        </div>
-        {{-- Real top 4 once there's enough to rank; otherwise an honest "how it works" demo --}}
-        @if ($today->count() >= 3)
-            <x-live-ranking :products="$today->take(4)" :pulse="$pulse" class="mt-12" />
-        @else
-            <x-rank-demo class="mt-12" />
-        @endif
-    </section>
-    </div>
+        <section class="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pt-16 pb-14 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14">
+            <div class="intro text-center lg:text-left">
+                <p class="text-sm font-medium text-ink-2">The daily launch board for indie makers</p>
+                <h1 class="display mt-3 !text-[clamp(2.5rem,5.6vw,4rem)]">Launch your product.<br><span class="text-ink-3">Climb the ranks.</span></h1>
+                <p class="mx-auto mt-5 max-w-lg text-[1.0625rem] leading-relaxed text-ink-2 lg:mx-0">
+                    List your app today or pick your launch day. Get upvotes, early users, a backlink that lasts, and a badge to prove your rank.
+                </p>
+                <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+                    <a href="{{ route('submit') }}" class="btn btn-primary btn-lg !h-[3.25rem] max-w-full min-[380px]:!pl-2.5 !pr-5">
+                        @if ($faces->isNotEmpty())
+                            <span class="hidden -space-x-2 min-[380px]:flex">
+                                @foreach ($faces as $face)
+                                    <span class="app-icon size-8 !rounded-[0.55rem] ring-2 ring-[#2a2a2c]"><img src="{{ $face->logoUrl() }}" alt=""></span>
+                                @endforeach
+                            </span>
+                        @endif
+                        <span class="ml-1">Launch your product</span>
+                        <x-icon name="arrow-right" :size="16" :stroke="2" />
+                    </a>
+                    <a href="{{ route('discover') }}" class="btn btn-outline btn-lg">Explore apps</a>
+                </div>
+                <p class="mt-3 text-sm text-ink-2">Free to list. No card needed.</p>
 
-    @if ($pricing->promoActive())
-        <div class="mx-auto max-w-2xl px-4 pb-14 sm:px-6">
-            <x-promo-banner :pricing="$pricing">
-                <a href="{{ route('submit') }}" class="btn btn-primary btn-sm shrink-0">Claim a spot</a>
-            </x-promo-banner>
-        </div>
-    @endif
+                <dl class="mx-auto mt-10 grid max-w-md grid-cols-3 gap-6 lg:mx-0">
+                    @foreach ($heroStats as $label => $value)
+                        <div>
+                            <dd class="text-[1.75rem] font-bold leading-none tabular-nums tracking-[-0.03em]">{{ number_format($value) }}</dd>
+                            <dt class="mt-1.5 text-xs text-ink-2">{{ $label }}</dt>
+                        </div>
+                    @endforeach
+                </dl>
+            </div>
+
+            <div data-reveal>
+                {{-- Real rankings once there's enough to rank; otherwise an honest "how it works" demo --}}
+                @if ($today->count() >= 3)
+                    <x-live-ranking :products="$today->take(5)" :week="$week" :pulse="$pulse" />
+                @else
+                    <x-rank-demo />
+                @endif
+            </div>
+        </section>
+    </div>
 
     {{-- Showcase: today's board inside a tray --}}
     <section class="mx-auto max-w-6xl px-4 sm:px-6">

@@ -31,6 +31,10 @@
                 <stop offset="0.9" stop-color="#fff" stop-opacity="1" />
                 <stop offset="1" stop-color="#fff" stop-opacity="0" />
             </linearGradient>
+            <radialGradient id="hero-glow">
+                <stop offset="0" stop-color="var(--accent)" stop-opacity="0.35" />
+                <stop offset="1" stop-color="var(--accent)" stop-opacity="0" />
+            </radialGradient>
             <mask id="hero-mask"><rect width="{{ $W }}" height="{{ $H }}" fill="url(#hero-edges)" /></mask>
         </defs>
 
@@ -39,12 +43,16 @@
             <path id="hero-graph" d="{{ $line }}" fill="none" stroke="currentColor" stroke-width="2.5"
                   stroke-linejoin="round" stroke-linecap="round" pathLength="1" class="hero-line" />
 
-            {{-- Dot travelling along the line --}}
-            <circle r="5" fill="currentColor" class="hero-runner">
+            {{-- Orange tracker travelling along the line: glow, ring, crosshair ticks, core --}}
+            <g class="hero-runner">
+                <circle r="18" fill="url(#hero-glow)" />
+                <circle r="9" fill="none" stroke="var(--accent)" stroke-width="1.5" />
+                <path d="M-15 0H-11M11 0H15M0 -15V-11M0 11V15" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" />
+                <circle r="3.5" fill="var(--accent)" />
                 <animateMotion dur="9s" repeatCount="indefinite" calcMode="linear" begin="2.6s" data-motion>
                     <mpath href="#hero-graph" />
                 </animateMotion>
-            </circle>
+            </g>
 
             {{-- #1 at the end of the climb --}}
             <circle cx="{{ $end[0] }}" cy="{{ $end[1] }}" r="10" fill="none" stroke="currentColor" stroke-width="1.5" class="hero-end" />

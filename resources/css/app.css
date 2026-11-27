@@ -22,6 +22,7 @@
     --on-ink: #ffffff;
     --bar: rgba(250, 250, 250, 0.82);
     --danger: #d70015;
+    --accent: #f97316; /* orange: used sparingly (hero tracker) */
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px -6px rgba(0, 0, 0, 0.05);
     --btn-primary: linear-gradient(180deg, #3b3b3d 0%, #171717 100%);
     --btn-primary-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 1px 2px rgba(0, 0, 0, 0.2), 0 6px 16px -6px rgba(0, 0, 0, 0.35);
@@ -43,6 +44,7 @@
         --on-ink: #000000;
         --bar: rgba(10, 10, 10, 0.78);
         --danger: #ff6961;
+        --accent: #fb923c;
         --shadow: none;
         --btn-primary: linear-gradient(180deg, #ffffff 0%, #e4e4e7 100%);
         --btn-primary-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -623,11 +625,8 @@
     to { opacity: 0.3; transform: scale(1); }
 }
 
-.hero-runner { fill-opacity: 0.35; }
-
 @media (prefers-color-scheme: dark) {
     .hero-line { opacity: 0.3; }
-    .hero-runner { fill-opacity: 0.5; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -662,3 +661,27 @@
     .vote-plus { animation: none; opacity: 0; }
 }
 
+
+/* Scrolling launch-offer bar above the header */
+.promo-track {
+    animation: promo-scroll 45s linear infinite;
+}
+
+.promo-marquee:hover .promo-track,
+.promo-marquee:focus-visible .promo-track {
+    animation-play-state: paused;
+}
+
+@keyframes promo-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .promo-track {
+        animation: none;
+        width: 100%;
+        justify-content: center;
+        overflow: hidden;
+    }
+}

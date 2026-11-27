@@ -60,13 +60,8 @@
     {{ $head ?? '' }}
 </head>
 <body class="min-h-screen font-sans">
-    @if ($pricing->promoActive() && ! request()->routeIs('home', 'launch', 'pricing', 'submit*', 'checkout*', 'admin*', 'launch.hub'))
-        <a href="{{ route('launch') }}" class="group block border-b border-line bg-surface px-4 py-2 text-center text-[0.8125rem]">
-            <span class="font-semibold">{{ $pricing->promo()['label'] }}:</span>
-            <span class="text-ink-2">{{ config('rankedlaunch.plans.pro.name') }} {{ \App\Services\Pricing::dollars($pricing->priceFor('pro')) }} <s class="text-ink-3">{{ \App\Services\Pricing::dollars($pricing->regularPrice('pro')) }}</s> for the first {{ $pricing->promo()['limit'] }} makers.</span>
-            <span class="font-semibold">{{ $pricing->promoRemaining() }} left</span>
-            <x-icon name="arrow-right" :size="13" :stroke="2" class="ml-0.5 inline -translate-y-px transition group-hover:translate-x-0.5" />
-        </a>
+    @if ($pricing->promoActive() && ! request()->routeIs('checkout*', 'admin*'))
+        <x-promo-marquee :pricing="$pricing" />
     @endif
     <header class="nav-bar sticky top-0 z-40">
         <div class="mx-auto grid h-15 max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-4 sm:px-6">

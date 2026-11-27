@@ -263,7 +263,7 @@ document.addEventListener('keydown', (event) => {
 // Homepage banner with real data: poll today's top 4, animate rank changes,
 // pop "+1" on new votes, and cycle the latest-upvote ticker.
 document.querySelectorAll('[data-rank-live]').forEach((board) => {
-    const ROW = Number(board.dataset.rowRem || 3.75);
+    const ROW = Number(board.dataset.rowRem || 3.5);
     const src = board.dataset.src;
     const rowsEl = board.querySelector('[data-rows]');
     const ticker = board.querySelector('[data-ticker]');
@@ -289,6 +289,14 @@ document.querySelectorAll('[data-rank-live]').forEach((board) => {
             count.parentElement.appendChild(plus);
             setTimeout(() => plus.remove(), 1400);
         }
+    };
+
+    const shares = () => {
+        const max = Math.max(1, ...rows().map((el) => Number(el.dataset.votes)));
+        rows().forEach((el) => {
+            const bar = el.querySelector('[data-share]');
+            if (bar) bar.style.width = `${Math.round((Number(el.dataset.votes) / max) * 100)}%`;
+        });
     };
 
     const apply = (top) => {
@@ -318,7 +326,16 @@ document.querySelectorAll('[data-rank-live]').forEach((board) => {
             rank.classList.toggle('text-ink', i < 3);
             rank.classList.toggle('text-ink-2', i >= 3);
         });
+        shares();
     };
+
+    // Today / This week tabs
+    board.querySelectorAll('[data-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            board.querySelectorAll('[data-tab]').forEach((t) => t.setAttribute('aria-selected', t === tab ? 'true' : 'false'));
+            board.querySelectorAll('[data-panel]').forEach((panel) => (panel.hidden = panel.dataset.panel !== tab.dataset.tab));
+        });
+    });
 
     const showTicker = () => {
         if (!ticker || !latest.length) return;

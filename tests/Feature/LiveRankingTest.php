@@ -32,7 +32,7 @@ class LiveRankingTest extends TestCase
 
         $this->get('/')->assertOk()
             ->assertSee('data-rank-live', false)
-            ->assertSee('Live ranking')
+            ->assertSee('Top launches')->assertSee('This week')
             ->assertDontSee('How ranking works')
             ->assertSeeInOrder(['Beta', 'Alpha', 'Gamma']);
     }

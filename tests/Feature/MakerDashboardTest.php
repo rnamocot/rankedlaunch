@@ -131,7 +131,7 @@ class MakerDashboardTest extends TestCase
         $this->product($maker, ['name' => 'Gamma', 'launch_date' => today()]);
         Vote::create(['user_id' => User::factory()->create()->id, 'product_id' => $a->id]);
 
-        $this->get('/')->assertOk()->assertSee('Latest upvote')->assertSee('Marketing');
+        $this->get('/')->assertOk()->assertSee('data-ticker', false)->assertSee('Marketing');
 
         $this->getJson('/live/today.json')->assertOk()
             ->assertJsonPath('top.0.category', 'Marketing')
