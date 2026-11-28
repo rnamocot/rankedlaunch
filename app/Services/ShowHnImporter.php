@@ -17,6 +17,8 @@ use Throwable;
  */
 class ShowHnImporter
 {
+    public function __construct(private LogoFetcher $logos) {}
+
     private const API = 'https://hacker-news.firebaseio.com/v0';
 
     /** Hosts that are posts or repos about a product rather than the product's own site. */
@@ -124,7 +126,7 @@ class ShowHnImporter
         $description = trim(($body !== '' ? Str::limit($body, 1200)."\n\n" : $tagline."\n\n")
             .'Shared on Hacker News “Show HN”'.($author ? " by {$author}" : '').'.');
 
-        return Product::create([
+        $product = Product::create([
             'user_id' => User::listingsAccount()->id,
             'category_id' => $this->guessCategory($title) ?? $this->guessCategory($body) ?? Category::where('slug', 'other')->value('id'),
             'name' => $name,
@@ -140,6 +142,14 @@ class ShowHnImporter
             'source_url' => 'https://news.ycombinator.com/item?id='.$item['id'],
             'source_author' => $author ?: null,
         ]);
+
+        try {
+            $product->update(['logo' => $this->logos->fetch($product)]);
+        } catch (Throwable $e) {
+            Log::warning('Logo fetch failed', ['product' => $product->id, 'error' => $e->getMessage()]);
+        }
+
+        return $product;
     }
 
     /**
@@ -166,7 +176,14 @@ class ShowHnImporter
 
         $name = Str::limit(trim($name, " \t\"'"), 60, '');
 
-        return [$name, Str::ucfirst(trim($tagline) !== '' ? trim($tagline) : $rest)];
+        $tagline = trim($tagline);
+
+        // First-person openers ("I wanted to…") read as a story, not a tagline.
+        if ($tagline === '' || preg_match('/^(i|we|my|our|hi|hey|hello)\b/i', $tagline)) {
+            $tagline = $usable ? $firstSentence : 'A new project shared on Show HN';
+        }
+
+        return [$name, Str::ucfirst($tagline)];
     }
 
     /** "acme.com" => "Acme"; "someone.github.io/sim-drop" or "github.com/someone/sim-drop" => "Sim Drop". */

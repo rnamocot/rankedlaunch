@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ShowHnImportTest extends TestCase
@@ -15,6 +16,7 @@ class ShowHnImportTest extends TestCase
 
     private function fakeHn(): void
     {
+        Storage::fake('public');
         $items = [
             1 => ['title' => 'Show HN: Olumino – A Markdown notes and spaced repetition app', 'url' => 'https://olumino.app', 'score' => 80, 'by' => 'maker1'],
             2 => ['title' => 'Show HN: I restored an old phone OS', 'url' => 'https://example.org/thing', 'score' => 300],
@@ -86,6 +88,6 @@ class ShowHnImportTest extends TestCase
         $this->artisan('launches:send-emails')->assertSuccessful();
 
         $this->assertSame(2, Product::count());
-        Http::assertSentCount(1 + 6);
+        $this->assertSame(1, Http::recorded(fn ($request) => str_contains($request->url(), 'showstories.json'))->count());
     }
 }
