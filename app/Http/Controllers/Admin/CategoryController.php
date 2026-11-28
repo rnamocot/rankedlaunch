@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -33,6 +34,8 @@ class CategoryController extends Controller
         ]);
         ActivityLog::record('settings', "Added category {$data['name']}", user: $request->user());
 
+        Cache::forget('footer-categories');
+
         return back()->with('status', 'Category added.');
     }
 
@@ -47,6 +50,8 @@ class CategoryController extends Controller
 
         $category->update($data);
 
+        Cache::forget('footer-categories');
+
         return back()->with('status', "{$category->name} saved.");
     }
 
@@ -56,6 +61,8 @@ class CategoryController extends Controller
 
         $category->delete();
         ActivityLog::record('settings', "Deleted category {$category->name}", user: $request->user());
+
+        Cache::forget('footer-categories');
 
         return back()->with('status', 'Category deleted.');
     }

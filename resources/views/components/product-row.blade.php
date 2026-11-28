@@ -19,8 +19,9 @@
                 <span class="mt-0.5 block truncate text-sm text-ink-2">{{ $product->tagline }}</span>
                 <span class="meta mt-1 hidden sm:flex">
                     @if ($product->category)<span>{{ $product->category->name }}</span>@endif
-                    <span>{{ $product->pricingLabel() }}</span>
+                    @unless ($product->isListing())<span>{{ $product->pricingLabel() }}</span>@endunless
                     @if ($product->comments_count)<span class="inline-flex items-center gap-1"><x-icon name="message" :size="12" />{{ $product->comments_count }}</span>@endif
+                    @if ($product->isListing())<span>Via {{ $product->sourceLabel() }}</span>@endif
                     @if ($pinned || $product->isFeatured())<span class="font-medium text-ink">Featured</span>@endif
                 </span>
             </span>

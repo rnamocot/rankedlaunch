@@ -11,7 +11,7 @@ class MakersController extends Controller
 {
     public function index(LaunchScheduler $scheduler)
     {
-        $live = Product::live();
+        $live = Product::launched();
 
         $stats = [
             'products' => (clone $live)->count(),
@@ -23,7 +23,7 @@ class MakersController extends Controller
         // Only show numbers once they're impressive enough to help, not hurt.
         $showStats = $stats['products'] >= 25;
 
-        $recent = Product::live()->latest('launch_date')->ranked()->limit(8)->get();
+        $recent = Product::launched()->latest('launch_date')->ranked()->limit(8)->get();
 
         return view('launch', [
             'stats' => $stats,

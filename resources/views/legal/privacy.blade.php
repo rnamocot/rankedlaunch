@@ -10,7 +10,7 @@
         <li><strong>Payments:</strong> handled by our payment partner. We only receive the order ID, amount and status, never your card details.</li>
         <li><strong>Newsletter:</strong> your email, if you subscribe.</li>
         <li><strong>Global chat:</strong> messages are public and anonymous. We store a random browser id and a one-way hash of your IP address (never the IP itself) only to stop spam and mute people who break the rules. Only the latest 50 messages are kept; older ones are deleted automatically.</li>
-        <li><strong>Usage:</strong> anonymous view and click counts for product pages. A session cookie keeps you signed in and stops us counting the same visit twice.</li>
+        <li><strong>Usage:</strong> anonymous view and click counts for product pages. A session cookie keeps you signed in and stops us counting the same visit twice. A random visitor cookie (stored by us only in hashed form, with no IP address) powers the anonymous “here right now” and visitor counts.</li>
     </ul>
 
     <h2>How we use it</h2>

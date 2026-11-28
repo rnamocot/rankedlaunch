@@ -60,6 +60,15 @@ class User extends Authenticatable
         return $candidate;
     }
 
+    /** The house account that owns imported directory listings until a maker claims them. */
+    public static function listingsAccount(): self
+    {
+        return static::firstOrCreate(
+            ['username' => 'rankedlaunch'],
+            ['name' => 'RankedLaunch', 'email' => 'listings'.self::PLACEHOLDER_DOMAIN, 'password' => Str::random(40)],
+        );
+    }
+
     public function profileUrl(): string
     {
         return route('profile', $this->username);

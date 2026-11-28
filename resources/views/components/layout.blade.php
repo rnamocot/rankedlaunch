@@ -25,6 +25,12 @@
     $me = auth()->user();
     $unreadCount = $me ? $me->unreadNotifications()->count() : 0;
     $recentNotifications = $me ? $me->notifications()->limit(6)->get() : collect();
+    // Every category for the footer, grouped (cached; the list rarely changes).
+    $footerCategories = \Illuminate\Support\Facades\Cache::remember('footer-categories', 600, fn () => \App\Models\Category::orderBy('sort')
+        ->get(['name', 'slug', 'group'])
+        ->groupBy(fn ($c) => $c->group ?: 'More')
+        ->map(fn ($items) => $items->map(fn ($c) => ['name' => $c->name, 'url' => route('category', $c->slug)])->all())
+        ->all());
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -72,7 +78,7 @@
     @endif
     <header class="nav-bar sticky top-0 z-40">
         <div class="mx-auto grid h-15 max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-4 sm:px-6">
-            <a href="{{ route('home') }}" class="justify-self-start text-ink" aria-label="RankedLaunch home">
+            <a href="{{ route('home') }}" class="logo-link justify-self-start text-ink" aria-label="RankedLaunch home">
                 <x-logo />
             </a>
 
@@ -160,6 +166,26 @@
     </main>
 
     <footer class="mt-24 border-t border-line">
+        @if ($footerCategories)
+            <nav class="mx-auto max-w-6xl border-b border-line px-4 py-12 sm:px-6" aria-label="All categories">
+                <div class="flex items-baseline justify-between gap-4">
+                    <p class="text-sm font-semibold">Browse all categories</p>
+                    <a href="{{ route('discover') }}" class="text-xs font-medium text-ink-2 hover:text-ink">Discover everything</a>
+                </div>
+                <div class="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+                    @foreach ($footerCategories as $group => $items)
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-ink-3">{{ $group }}</p>
+                            <ul class="mt-3 space-y-1.5 text-sm text-ink-2">
+                                @foreach ($items as $item)
+                                    <li><a class="hover:text-ink" href="{{ $item['url'] }}">{{ $item['name'] }}</a></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endforeach
+                </div>
+            </nav>
+        @endif
         <div class="mx-auto grid grid-cols-1 max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
             <div>
                 <x-logo />

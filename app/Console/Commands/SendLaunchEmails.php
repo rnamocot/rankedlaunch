@@ -32,6 +32,7 @@ class SendLaunchEmails extends Command
         foreach ($batches as [$type, $date, $column]) {
             Product::with('user')
                 ->where('status', 'approved')
+                ->whereNull('source')
                 ->whereDate('launch_date', $date)
                 ->whereNull($column)
                 ->each(function (Product $product) use ($mailer, $type, $column, &$sent) {
@@ -49,6 +50,15 @@ class SendLaunchEmails extends Command
         }
 
         $reminded = $this->sendLaunchReminders();
+
+        // The host's cron only runs this command, so the daily Show HN import rides along once per UTC day.
+        if (config('rankedlaunch.show_hn_import.enabled') && Cache::add('show-hn-import:'.today()->toDateString(), true, now()->addDay())) {
+            try {
+                $this->call('listings:import-show-hn');
+            } catch (Throwable $e) {
+                Log::error('Show HN import failed', ['error' => $e->getMessage()]);
+            }
+        }
 
         Cache::forever('rankedlaunch.scheduler_last_run', now()->toIso8601String());
 

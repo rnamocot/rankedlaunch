@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Vote;
+use App\Services\VisitorTracker;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -16,10 +17,10 @@ class HomeController extends Controller
     {
         $with = ['category'];
 
-        $today = Product::live()->whereDate('launch_date', today())->with($with)->withCount('comments')->ranked()->get();
+        $today = Product::launched()->whereDate('launch_date', today())->with($with)->withCount('comments')->ranked()->get();
 
         // Earlier days, newest first: yesterday's top five, then "Show more" loads older days.
-        $yesterday = Product::live()->whereDate('launch_date', today()->subDay())->with($with)->withCount('comments')->ranked()->get();
+        $yesterday = Product::launched()->whereDate('launch_date', today()->subDay())->with($with)->withCount('comments')->ranked()->get();
         $nextDay = self::previousLaunchDay(today()->subDay());
 
         // Sidebar: what's coming up, with "Notify me".
@@ -51,13 +52,25 @@ class HomeController extends Controller
             ? ['product' => $spotlightProduct, 'label' => 'Featured', 'accent' => true]
             : ($today->first() ? ['product' => $today->first(), 'label' => '#1 today', 'accent' => false] : null);
 
+        $visitors = app(VisitorTracker::class)->stats();
         $heroStats = [
-            'Launching today' => $today->count(),
-            'Upvotes today' => Vote::where('created_at', '>=', today())->count(),
-            'Makers' => User::has('products')->count(),
+            'live' => ['Here right now', $visitors['live']],
+            'today' => ['Visitors today', $visitors['today']],
+            'launches' => ['Launching today', $today->count()],
+            'upvotes' => ['Upvotes today', Vote::where('created_at', '>=', today())->count()],
         ];
 
-        return view('home', compact('today', 'yesterday', 'nextDay', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats', 'spotlight', 'upcoming', 'upcomingTotal', 'remindedIds', 'topMakers'));
+        // "Happening now" stream and the flowing logo strip: real launches and activity only.
+        $activity = PresenceController::events();
+        $logoStrip = Product::live()->ranked()->limit(28)->get();
+        $siteTotals = [
+            'visitors' => $visitors['total'],
+            'launches' => Product::launched()->count(),
+            'upvotes' => (int) Product::live()->sum('votes_count'),
+            'makers' => User::whereHas('products', fn ($q) => $q->whereNull('source'))->count(),
+        ];
+
+        return view('home', compact('today', 'yesterday', 'nextDay', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats', 'spotlight', 'upcoming', 'upcomingTotal', 'remindedIds', 'topMakers', 'activity', 'logoStrip', 'siteTotals'));
     }
 
     /** One earlier launch day for the homepage feed's "Show more" button. */
@@ -66,7 +79,7 @@ class HomeController extends Controller
         $day = Carbon::parse($date)->startOfDay();
         abort_unless($day->lt(today()), 404);
 
-        $products = Product::live()->whereDate('launch_date', $day)->with('category')->withCount('comments')->ranked()->get();
+        $products = Product::launched()->whereDate('launch_date', $day)->with('category')->withCount('comments')->ranked()->get();
         abort_if($products->isEmpty(), 404);
 
         $next = self::previousLaunchDay($day);
@@ -80,7 +93,7 @@ class HomeController extends Controller
     /** The closest day before $before that had live launches, if any. */
     public static function previousLaunchDay(Carbon $before): ?Carbon
     {
-        $date = Product::live()->whereDate('launch_date', '<', $before)->max('launch_date');
+        $date = Product::launched()->whereDate('launch_date', '<', $before)->max('launch_date');
 
         return $date ? Carbon::parse($date)->startOfDay() : null;
     }
@@ -91,7 +104,7 @@ class HomeController extends Controller
      */
     public static function pulse(): array
     {
-        $todayIds = Product::live()->whereDate('launch_date', today())->pluck('id');
+        $todayIds = Product::launched()->whereDate('launch_date', today())->pluck('id');
 
         $categories = Product::whereIn('id', $todayIds)->whereNotNull('category_id')
             ->with('category')->get()
@@ -119,7 +132,7 @@ class HomeController extends Controller
     /** Today's top launches for the homepage banner, refreshed by the browser every ~20s. */
     public function liveToday()
     {
-        $top = Cache::remember('live-today', 10, fn () => Product::live()
+        $top = Cache::remember('live-today', 10, fn () => Product::launched()
             ->with('category')
             ->whereDate('launch_date', today())
             ->ranked()

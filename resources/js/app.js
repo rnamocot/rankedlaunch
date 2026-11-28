@@ -1096,3 +1096,202 @@ document.querySelectorAll('[data-gallery]').forEach((gallery) => {
         if (event.key === 'ArrowRight') show(index + 1);
     });
 });
+
+// Animated numbers: [data-countup] counts up from 0 the first time it scrolls into view.
+// tweenNumber() is also used when live presence numbers change.
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const formatNumber = (n) => Math.round(n).toLocaleString('en-US');
+
+function tweenNumber(el, to, duration = 1200) {
+    const from = Number(el.dataset.current ?? 0);
+    el.dataset.current = to;
+    if (reducedMotion || from === to) {
+        el.textContent = formatNumber(to);
+        return;
+    }
+    const start = performance.now();
+    const step = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = formatNumber(from + (to - from) * eased);
+        if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+}
+
+const counters = document.querySelectorAll('[data-countup]');
+if ('IntersectionObserver' in window && !reducedMotion) {
+    const counterObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        counterObserver.unobserve(entry.target);
+        entry.target.dataset.current = 0;
+        tweenNumber(entry.target, Number(entry.target.dataset.countup), 1400);
+    }), { threshold: 0.4 });
+    counters.forEach((el) => {
+        el.dataset.current = el.dataset.countup;
+        counterObserver.observe(el);
+    });
+} else {
+    counters.forEach((el) => (el.dataset.current = el.dataset.countup));
+}
+
+// Presence: check in now and every 30s while the tab is visible; update every live number on the page.
+(() => {
+    let timer;
+    const ping = async () => {
+        if (document.visibilityState !== 'visible') return;
+        try {
+            const response = await fetch('/presence', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf(), Accept: 'application/json' },
+                credentials: 'same-origin',
+            });
+            if (!response.ok) return;
+            const stats = await response.json();
+            document.querySelectorAll('[data-presence]').forEach((el) => {
+                const value = stats[el.dataset.presence];
+                if (value === undefined) return;
+                el.dataset.countup = value;
+                tweenNumber(el, value, 900);
+            });
+            document.querySelectorAll('[data-presence-word]').forEach((el) => {
+                el.textContent = stats.live === 1 ? 'person is' : 'people are';
+            });
+        } catch {
+            // offline: keep the last numbers
+        }
+    };
+    const schedule = () => {
+        clearInterval(timer);
+        timer = setInterval(ping, 30000);
+    };
+    ping();
+    schedule();
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            ping();
+            schedule();
+        }
+    });
+})();
+
+// Relative times ("3m ago") that stay fresh.
+const timeAgo = (iso) => {
+    const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (seconds < 45) return 'now';
+    const units = [['y', 31536000], ['mo', 2592000], ['w', 604800], ['d', 86400], ['h', 3600], ['m', 60]];
+    for (const [unit, size] of units) {
+        if (seconds >= size) return `${Math.floor(seconds / size)}${unit} ago`;
+    }
+    return '1m ago';
+};
+setInterval(() => document.querySelectorAll('time[data-ago]').forEach((el) => (el.textContent = timeAgo(el.dateTime))), 30000);
+
+// "Happening now" stream: events enter at the top and push the oldest out at the bottom.
+// It plays recent activity in the order it happened, picks up new events as they arrive,
+// and starts the replay over once it has caught up and things are quiet.
+document.querySelectorAll('[data-stream]').forEach((stream) => {
+    const list = stream.querySelector('[data-stream-list]');
+    const status = document.querySelector('[data-stream-status]');
+    const icons = JSON.parse(stream.dataset.icons || '{}');
+    const visible = 6;
+    let events = [];
+    let queue = [];
+    let shown = new Set();
+    let running = false;
+    let timer;
+
+    const escapeText = (value) => {
+        const span = document.createElement('span');
+        span.textContent = value ?? '';
+        return span.innerHTML;
+    };
+
+    const render = (event) => {
+        const li = document.createElement('li');
+        li.className = 'stream-item is-entering';
+        li.dataset.id = event.id;
+        const name = event.url
+            ? `<a href="${escapeText(event.url)}" class="font-semibold hover:underline">${escapeText(event.product)}</a>`
+            : `<span class="font-semibold">${escapeText(event.product)}</span>`;
+        li.innerHTML = `<span class="app-icon size-9 !rounded-[0.6rem]"><img src="${escapeText(event.logo)}" alt="" loading="lazy"></span>
+            <span class="min-w-0 flex-1 truncate text-sm">${name} <span class="text-ink-2">${escapeText(event.text)}</span></span>
+            <time class="shrink-0 text-xs tabular-nums text-ink-3" datetime="${escapeText(event.at)}" data-ago>${timeAgo(event.at)}</time>
+            <span class="stream-type">${icons[event.type] ?? ''}</span>`;
+        return li;
+    };
+
+    const push = (event) => {
+        list.prepend(render(event));
+        shown.add(event.id);
+        const items = [...list.querySelectorAll('.stream-item:not(.is-leaving)')];
+        items.slice(visible).forEach((old) => {
+            old.classList.add('is-leaving');
+            old.addEventListener('animationend', () => old.remove(), { once: true });
+        });
+    };
+
+    const restartReplay = () => {
+        // Oldest first, so the stream ends on the newest event.
+        queue = [...events].reverse();
+        shown = new Set();
+        [...list.children].forEach((old, i) => {
+            old.style.animationDelay = `${i * 60}ms`;
+            old.classList.remove('is-entering');
+            old.classList.add('is-leaving');
+            old.addEventListener('animationend', () => old.remove(), { once: true });
+        });
+    };
+
+    const tick = () => {
+        if (document.visibilityState === 'visible') {
+            if (!queue.length && events.length) restartReplay();
+            const next = queue.shift();
+            if (next) push(next);
+        }
+        timer = setTimeout(tick, queue.length ? 2600 : 3600);
+    };
+
+    const load = async () => {
+        try {
+            const response = await fetch(stream.dataset.url, { headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const fresh = (await response.json()).events ?? [];
+            const known = new Set(events.map((e) => e.id));
+            const arrivals = fresh.filter((e) => !known.has(e.id)).reverse();
+            events = fresh;
+            if (!running) {
+                // First tick clears the static list and replays recent activity oldest to newest.
+                queue = [];
+                running = true;
+                if (status) status.textContent = 'Live · updates as it happens';
+                timer = setTimeout(tick, 1600);
+            } else if (arrivals.length) {
+                // Brand-new events jump the queue.
+                queue = [...arrivals.filter((e) => !shown.has(e.id)), ...queue];
+            }
+        } catch {
+            // try again on the next poll
+        }
+    };
+
+    if (reducedMotion) return;
+
+    const start = () => {
+        load();
+        setInterval(() => document.visibilityState === 'visible' && load(), 15000);
+    };
+
+    if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+            if (entries.some((e) => e.isIntersecting)) {
+                io.disconnect();
+                start();
+            }
+        });
+        io.observe(stream);
+    } else {
+        start();
+    }
+    window.addEventListener('pagehide', () => clearTimeout(timer));
+});

@@ -23,6 +23,7 @@ use App\Http\Controllers\LeaderboardController;
 use App\Http\Controllers\MakersController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\PresenceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RankingController;
@@ -47,6 +48,8 @@ Route::get('/live/today.json', [HomeController::class, 'liveToday'])->middleware
 Route::get('/chat/messages', [ChatController::class, 'index'])->middleware('throttle:40,1')->name('chat.index');
 Route::post('/chat/messages', [ChatController::class, 'store'])->middleware('throttle:20,1')->name('chat.store');
 Route::post('/chat/name', [ChatController::class, 'rename'])->middleware('throttle:10,1')->name('chat.rename');
+Route::post('/presence', [PresenceController::class, 'ping'])->middleware('throttle:12,1')->name('presence');
+Route::get('/live/activity.json', [PresenceController::class, 'activity'])->middleware('throttle:30,1')->name('live.activity');
 Route::get('/upcoming', [UpcomingController::class, 'index'])->name('upcoming');
 Route::get('/makers/{period?}', [LeaderboardController::class, 'show'])->name('leaderboard');
 Route::get('/search.json', SearchController::class)->middleware('throttle:60,1')->name('search');

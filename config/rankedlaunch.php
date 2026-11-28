@@ -24,6 +24,16 @@ return [
     'max_days_ahead' => 90,
     // Anonymous global chat ("Maker lounge") on public pages.
     'chat_enabled' => (bool) env('RL_CHAT_ENABLED', true),
+
+    /*
+     * Daily directory import from Hacker News "Show HN" (official public API).
+     * Imported apps are listings: shown in Discover and categories, never ranked or awarded.
+     */
+    'show_hn_import' => [
+        'enabled' => (bool) env('RL_SHOW_HN_IMPORT', true),
+        'per_day' => (int) env('RL_SHOW_HN_PER_DAY', 10),
+        'min_score' => (int) env('RL_SHOW_HN_MIN_SCORE', 20),
+    ],
     'free_slots_per_day' => (int) env('RL_FREE_SLOTS_PER_DAY', 25),
     // Pro launches per day. Every Pro launch is featured, so this keeps the homepage rotation valuable.
     'paid_slots_per_day' => (int) env('RL_PAID_SLOTS_PER_DAY', 5),

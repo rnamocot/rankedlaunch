@@ -69,7 +69,7 @@
                     @endif
                     <span class="meta flex">
                         @if ($product->category)<span>{{ $product->category->name }}</span>@endif
-                        <span>{{ $product->pricingLabel() }}</span>
+                        @if ($product->isListing())<span>Via {{ $product->sourceLabel() }}</span>@else<span>{{ $product->pricingLabel() }}</span>@endif
                         @if ($product->isFeatured())<span class="font-medium text-ink">Featured</span>@endif
                     </span>
                 </div>
@@ -161,8 +161,22 @@
         </article>
 
         <aside class="space-y-6 lg:sticky lg:top-20 lg:self-start">
+            {{-- Directory listing: imported, so it never ranks; the maker can claim it --}}
+            @if ($product->isListing())
+                <section class="card p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-ink-2">Directory listing</p>
+                    <p class="mt-2 text-sm leading-relaxed">Listed by RankedLaunch from <span class="font-semibold">{{ $product->sourceLabel() }}</span>{{ $product->source_author ? ', shared by '.$product->source_author : '' }}. Listings don’t enter rankings or awards.</p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @if ($product->source_url)
+                            <a href="{{ $product->source_url }}" target="_blank" rel="nofollow noopener" class="btn btn-secondary btn-sm">View the {{ $product->sourceLabel() }} post <x-icon name="arrow-up-right" :size="13" :stroke="2" /></a>
+                        @endif
+                        <a href="mailto:{{ config('rankedlaunch.contact_email') }}?subject={{ rawurlencode('Claim '.$product->name.' on RankedLaunch') }}&body={{ rawurlencode('Hi! I make '.$product->name.' ('.$product->url.') and would like to claim this listing: '.route('product', $product)) }}" class="btn btn-outline btn-sm">Is this yours? Claim it</a>
+                    </div>
+                </section>
+            @endif
+
             {{-- Launch results --}}
-            @if ($product->isLive())
+            @if ($product->isRankable())
                 <section class="card p-5">
                     <div class="flex items-end justify-between gap-4">
                         <div>
@@ -191,9 +205,9 @@
                 <dl class="card overflow-hidden text-sm">
                     @php($rows = array_filter([
                         'Category' => $product->category?->name,
-                        'Pricing' => $product->pricingLabel(),
+                        'Pricing' => $product->isListing() ? null : $product->pricingLabel(),
                         'Website' => $product->host(),
-                        'Launch date' => $product->launch_date?->format('M j, Y'),
+                        ($product->isListing() ? 'Listed' : 'Launch date') => $product->launch_date?->format('M j, Y'),
                     ]))
                     @foreach ($rows as $label => $value)
                         <div class="list-row flex items-center justify-between gap-4 px-4 py-3">
@@ -204,7 +218,7 @@
                 </dl>
             </section>
 
-            @if ($product->user)
+            @if ($product->user && ! $product->isListing())
                 <section>
                     <h2 class="group-header">Launched by</h2>
                     <a href="{{ $product->user->profileUrl() }}" class="card card-hover block p-4">

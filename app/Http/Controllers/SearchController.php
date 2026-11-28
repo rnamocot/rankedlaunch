@@ -40,7 +40,7 @@ class SearchController extends Controller
         $categories = Category::where('name', 'like', $like)->orderBy('name')->limit(4)->get()
             ->map(fn (Category $c) => ['name' => $c->name, 'url' => route('category', $c)]);
 
-        $makers = User::whereNull('banned_at')->has('products')
+        $makers = User::whereNull('banned_at')->where('username', '!=', 'rankedlaunch')->has('products')
             ->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('username', 'like', $like))
             ->limit(4)->get()
             ->map(fn (User $u) => [

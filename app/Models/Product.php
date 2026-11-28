@@ -19,8 +19,11 @@ class Product extends Model
         'user_id', 'category_id', 'name', 'slug', 'url', 'tagline', 'description',
         'logo', 'screenshots', 'pricing_type', 'plan', 'status', 'launch_date',
         'requested_launch_date', 'requested_plan', 'is_dofollow', 'featured_until',
-        'votes_count', 'rejection_reason',
+        'votes_count', 'rejection_reason', 'source', 'source_id', 'source_url', 'source_author',
     ];
+
+    /** Where imported directory listings come from (source => label). */
+    public const SOURCES = ['hn' => 'Show HN'];
 
     protected function casts(): array
     {
@@ -82,6 +85,12 @@ class Product extends Model
             ->whereDate('launch_date', '<=', today());
     }
 
+    /** Live products that launched here: excludes imported directory listings, which never rank. */
+    public function scopeLaunched(Builder $query): Builder
+    {
+        return $query->live()->whereNull('source');
+    }
+
     /** Approved launches scheduled after today. */
     public function scopeUpcoming(Builder $query): Builder
     {
@@ -90,7 +99,7 @@ class Product extends Model
 
     public function scopeLaunchedBetween(Builder $query, Carbon $from, Carbon $to): Builder
     {
-        return $query->live()
+        return $query->launched()
             ->whereDate('launch_date', '>=', $from)
             ->whereDate('launch_date', '<=', $to);
     }
@@ -198,6 +207,23 @@ class Product extends Model
         return $this->status === 'approved' && $this->launch_date && $this->launch_date->lte(today());
     }
 
+    /** An imported directory listing (e.g. from Show HN) rather than a launch by its maker. */
+    public function isListing(): bool
+    {
+        return $this->source !== null;
+    }
+
+    /** Live launches compete in rankings and awards; listings don't. */
+    public function isRankable(): bool
+    {
+        return $this->isLive() && ! $this->isListing();
+    }
+
+    public function sourceLabel(): ?string
+    {
+        return $this->source ? (self::SOURCES[$this->source] ?? ucfirst($this->source)) : null;
+    }
+
     public function isFeatured(): bool
     {
         return $this->featured_until && $this->featured_until->isFuture();
@@ -206,11 +232,11 @@ class Product extends Model
     /** Rank among products that launched the same day (1-based), or null if not live. */
     public function dailyRank(): ?int
     {
-        if (! $this->isLive()) {
+        if (! $this->isRankable()) {
             return null;
         }
 
-        return static::live()
+        return static::launched()
             ->whereDate('launch_date', $this->launch_date)
             ->where(function ($q) {
                 $q->where('votes_count', '>', $this->votes_count)
@@ -222,7 +248,7 @@ class Product extends Model
     /** Rank within the ISO week of its launch. */
     public function weeklyRank(): ?int
     {
-        if (! $this->isLive()) {
+        if (! $this->isRankable()) {
             return null;
         }
 
@@ -243,7 +269,7 @@ class Product extends Model
     /** Rank among live products launched between $from and $to (1-based), or null if not live. */
     public function rankBetween(Carbon $from, Carbon $to): ?int
     {
-        if (! $this->isLive()) {
+        if (! $this->isRankable()) {
             return null;
         }
 
@@ -263,7 +289,7 @@ class Product extends Model
      */
     public function award(): ?array
     {
-        if (! $this->isLive()) {
+        if (! $this->isRankable()) {
             return null;
         }
 

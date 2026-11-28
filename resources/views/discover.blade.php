@@ -57,7 +57,7 @@
                         </div>
                         <p class="mt-4 font-semibold tracking-[-0.015em]">{{ $product->name }}</p>
                         <p class="mt-1 line-clamp-2 flex-1 text-sm text-ink-2">{{ $product->tagline }}</p>
-                        <p class="meta mt-3 flex"><span>{{ $product->category?->name }}</span><span>{{ $product->pricingLabel() }}</span></p>
+                        <p class="meta mt-3 flex"><span>{{ $product->category?->name }}</span><span>{{ $product->isListing() ? 'Via '.$product->sourceLabel() : $product->pricingLabel() }}</span></p>
                     </a>
                 @endforeach
             </div>

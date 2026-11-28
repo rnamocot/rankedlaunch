@@ -39,10 +39,13 @@
 
                 <x-flip-clock :to="today('UTC')->addDay()" label="Today’s voting closes in" class="mt-10 flex flex-col items-center lg:items-start" />
 
-                <dl class="mx-auto mt-10 grid max-w-md grid-cols-3 gap-6 lg:mx-0">
-                    @foreach ($heroStats as $label => $value)
+                <dl class="mx-auto mt-10 grid max-w-lg grid-cols-2 gap-x-6 gap-y-6 sm:grid-cols-4 lg:mx-0">
+                    @foreach ($heroStats as $key => [$label, $value])
                         <div>
-                            <dd class="text-[1.75rem] font-bold leading-none tabular-nums tracking-[-0.03em]">{{ number_format($value) }}</dd>
+                            <dd class="flex items-center justify-center gap-2 text-[1.75rem] font-bold leading-none tabular-nums tracking-[-0.03em] lg:justify-start">
+                                @if ($key === 'live')<span class="live-dot" aria-hidden="true"></span>@endif
+                                <span @if (in_array($key, ['live', 'today'])) data-presence="{{ $key }}" @endif data-countup="{{ $value }}">{{ number_format($value) }}</span>
+                            </dd>
                             <dt class="mt-1.5 text-xs text-ink-2">{{ $label }}</dt>
                         </div>
                     @endforeach
@@ -198,6 +201,8 @@
             @endif
         </aside>
     </section>
+
+    @include('partials.home-live')
 
     <div class="hairline mx-auto mt-20 max-w-6xl"></div>
 

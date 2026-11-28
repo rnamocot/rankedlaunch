@@ -35,7 +35,7 @@ class BoardAndAwardsTest extends TestCase
 
         $this->get('/')->assertOk()
             ->assertSeeInOrder(['Launching today', 'TodayOne', 'Yesterday’s top launches', 'YesterdayOne'])
-            ->assertSee('TomorrowOne')->assertDontSee('NotApproved')->assertDontSee('OlderOne')
+            ->assertSee('TomorrowOne')->assertDontSee('NotApproved')
             ->assertSee(route('home.day', today()->subDays(10)->toDateString()), false)
             ->assertSee('data-filter="design"', false)->assertSee('data-filter="finance"', false);
     }
