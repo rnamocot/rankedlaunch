@@ -13,11 +13,18 @@
     };
     $nav = [
         ['Today', route('home'), request()->routeIs('home')],
-        ['Discover', route('discover'), request()->routeIs('discover', 'alternatives')],
+        ['Upcoming', route('upcoming'), request()->routeIs('upcoming')],
+        ['Discover', route('discover'), request()->routeIs('discover', 'alternatives', 'category')],
         ['Rankings', route('rankings'), request()->routeIs('rankings')],
+        ['Makers', route('leaderboard'), request()->routeIs('leaderboard')],
         ['Launch', route('launch'), request()->routeIs('launch')],
-        ['Pricing', route('pricing'), request()->routeIs('pricing')],
     ];
+    if ($paymentsAvailable) {
+        $nav[] = ['Pricing', route('pricing'), request()->routeIs('pricing')];
+    }
+    $me = auth()->user();
+    $unreadCount = $me ? $me->unreadNotifications()->count() : 0;
+    $recentNotifications = $me ? $me->notifications()->limit(6)->get() : collect();
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -69,18 +76,37 @@
                 <x-logo />
             </a>
 
-            <nav class="hidden items-center gap-1 lg:flex">
+            <nav class="hidden items-center gap-0.5 xl:flex">
                 @foreach ($nav as [$label, $href, $active])
                     <a href="{{ $href }}" @if($active) aria-current="page" @endif
-                       class="rounded-full px-3 py-1.5 text-sm font-medium {{ $active ? 'text-ink' : 'text-ink-2 hover:text-ink' }}">{{ $label }}</a>
+                       class="whitespace-nowrap rounded-full px-2.5 py-1.5 text-sm font-medium {{ $active ? 'text-ink' : 'text-ink-2 hover:text-ink' }}">{{ $label }}</a>
                 @endforeach
             </nav>
 
             <div class="col-start-3 flex items-center justify-end gap-3">
-                <a href="{{ route('discover') }}" class="grid size-9 place-items-center rounded-full text-ink-2 transition-colors hover:bg-fill hover:text-ink" aria-label="Search tools" title="Search tools (press /)">
+                <a href="{{ route('discover') }}" data-search-open class="grid size-9 place-items-center rounded-full text-ink-2 transition-colors hover:bg-fill hover:text-ink" aria-label="Search" title="Search (Ctrl+K)">
                     <x-icon name="search" :size="18" />
                 </a>
                 @auth
+                    <div class="relative" data-popover>
+                        <button type="button" class="relative grid size-9 place-items-center rounded-full text-ink-2 transition-colors hover:bg-fill hover:text-ink" data-popover-toggle data-read-url="{{ $unreadCount ? route('notifications.read') : '' }}" aria-expanded="false" aria-label="Notifications{{ $unreadCount ? ' ('.$unreadCount.' unread)' : '' }}">
+                            <x-icon name="bell" :size="18" />
+                            @if ($unreadCount)
+                                <span data-unread class="absolute top-1 right-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--accent)] px-1 text-[0.625rem] font-bold leading-none text-white tabular-nums">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                            @endif
+                        </button>
+                        <div hidden data-popover-panel class="card absolute top-11 -right-2 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden !shadow-xl">
+                            <div class="flex items-center justify-between border-b border-line px-4 py-3">
+                                <span class="text-sm font-semibold">Notifications</span>
+                                <a href="{{ route('notifications') }}" class="text-xs font-medium text-ink-2 hover:text-ink">See all</a>
+                            </div>
+                            @forelse ($recentNotifications as $n)
+                                @include('partials.notification', ['n' => $n, 'compact' => true])
+                            @empty
+                                <p class="px-4 py-8 text-center text-sm text-ink-2">Nothing yet. Replies, comments and upvotes on your launches show up here.</p>
+                            @endforelse
+                        </div>
+                    </div>
                     <a href="{{ route('dashboard') }}" class="hidden items-center sm:flex" aria-label="Your dashboard">
                         @if (auth()->user()->avatar)
                             <img src="{{ auth()->user()->avatar }}" alt="" class="size-8 rounded-full outline outline-1 -outline-offset-1 outline-line">
@@ -89,16 +115,16 @@
                         @endif
                     </a>
                 @else
-                    <a href="{{ route('login') }}" class="hidden text-sm font-medium text-ink hover:text-ink-2 sm:inline">Sign in</a>
+                    <a href="{{ route('login') }}" class="hidden whitespace-nowrap text-sm font-medium text-ink hover:text-ink-2 sm:inline">Sign in</a>
                 @endauth
                 <a href="{{ route('submit') }}" class="btn btn-primary btn-sm hidden sm:inline-flex">Launch your product</a>
-                <button type="button" class="grid size-9 place-items-center rounded-full text-ink lg:hidden" data-menu-toggle="mobile-menu" aria-expanded="false" aria-label="Menu">
+                <button type="button" class="grid size-9 place-items-center rounded-full text-ink xl:hidden" data-menu-toggle="mobile-menu" aria-expanded="false" aria-label="Menu">
                     <x-icon name="menu" :size="20" />
                 </button>
             </div>
         </div>
 
-        <div id="mobile-menu" hidden class="border-t border-line px-4 pb-4 lg:hidden">
+        <div id="mobile-menu" hidden class="border-t border-line px-4 pb-4 xl:hidden">
             <form method="GET" action="{{ route('discover') }}" class="relative pt-4" role="search">
                 <x-icon name="search" :size="16" class="pointer-events-none absolute top-[1.625rem] left-3.5 text-ink-2" />
                 <label for="mobile-search" class="sr-only">Search tools</label>
@@ -110,6 +136,7 @@
                 @endforeach
                 @auth
                     <a href="{{ route('dashboard') }}" class="py-2.5 text-[0.9375rem] font-medium text-ink-2">Dashboard</a>
+                    <a href="{{ route('notifications') }}" class="py-2.5 text-[0.9375rem] font-medium text-ink-2">Notifications @if ($unreadCount)<span class="tabular-nums text-[var(--accent)]">{{ $unreadCount }}</span>@endif</a>
                 @endauth
             </nav>
             <div class="flex gap-2">
@@ -142,6 +169,8 @@
                 <p class="text-sm font-semibold">Discover</p>
                 <ul class="mt-3 space-y-2 text-sm text-ink-2">
                     <li><a class="hover:text-ink" href="{{ route('home') }}">Today’s launches</a></li>
+                    <li><a class="hover:text-ink" href="{{ route('upcoming') }}">Upcoming launches</a></li>
+                    <li><a class="hover:text-ink" href="{{ route('leaderboard') }}">Maker leaderboard</a></li>
                     <li><a class="hover:text-ink" href="{{ route('discover') }}">Discover tools</a></li>
                     <li><a class="hover:text-ink" href="{{ route('rankings', 'week') }}">Top this week</a></li>
                     <li><a class="hover:text-ink" href="{{ route('rankings', 'month') }}">Top this month</a></li>
@@ -175,6 +204,7 @@
             <a class="hover:text-ink" href="mailto:{{ config('rankedlaunch.contact_email') }}">Contact</a>
         </div>
     </footer>
+    <x-search-palette />
     @if (config('rankedlaunch.chat_enabled') && ! request()->routeIs('admin*', 'checkout*') && request()->route())
         <x-chat-widget />
     @endif

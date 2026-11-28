@@ -25,6 +25,11 @@ class Comment extends Model
         return $this->hasMany(Comment::class, 'parent_id')->oldest();
     }
 
+    public function votes(): HasMany
+    {
+        return $this->hasMany(CommentVote::class);
+    }
+
     public function isByMaker(): bool
     {
         return $this->product && $this->user_id === $this->product->user_id;

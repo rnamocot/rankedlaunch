@@ -24,18 +24,34 @@ class BoardAndAwardsTest extends TestCase
         ]);
     }
 
-    public function test_board_has_yesterday_today_tomorrow_and_category_filters(): void
+    public function test_feed_shows_today_yesterday_upcoming_and_category_filters(): void
     {
         $this->launch('TodayOne', today(), 3, category: 'Design');
         $this->launch('TodayTwo', today(), 1, category: 'Finance');
         $this->launch('YesterdayOne', today()->subDay(), 9);
+        $this->launch('OlderOne', today()->subDays(10), 2);
         $this->launch('TomorrowOne', today()->addDay());
         $this->launch('NotApproved', today()->addDay(), status: 'pending');
 
         $this->get('/')->assertOk()
-            ->assertSee('data-board-tab="yesterday"', false)->assertSee('data-board-tab="tomorrow"', false)
-            ->assertSee('YesterdayOne')->assertSee('TomorrowOne')->assertDontSee('NotApproved')
+            ->assertSeeInOrder(['Launching today', 'TodayOne', 'Yesterday’s top launches', 'YesterdayOne'])
+            ->assertSee('TomorrowOne')->assertDontSee('NotApproved')->assertDontSee('OlderOne')
+            ->assertSee(route('home.day', today()->subDays(10)->toDateString()), false)
             ->assertSee('data-filter="design"', false)->assertSee('data-filter="finance"', false);
+    }
+
+    public function test_show_more_loads_an_earlier_day_and_points_to_the_next(): void
+    {
+        $this->launch('OlderOne', today()->subDays(4), 2);
+        $this->launch('OldestOne', today()->subDays(9), 1);
+
+        $this->getJson('/days/'.today()->subDays(4)->toDateString())->assertOk()
+            ->assertJsonPath('next', today()->subDays(9)->toDateString())
+            ->assertSee('OlderOne');
+
+        $this->getJson('/days/'.today()->subDays(9)->toDateString())->assertOk()->assertJsonPath('next', null);
+        $this->getJson('/days/'.today()->subDays(5)->toDateString())->assertNotFound();
+        $this->getJson('/days/'.today()->toDateString())->assertNotFound();
     }
 
     public function test_awards_cover_day_week_month_year_top_five_once_period_ends(): void

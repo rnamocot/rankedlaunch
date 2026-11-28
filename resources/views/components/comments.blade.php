@@ -1,4 +1,4 @@
-@props(['product', 'comments'])
+@props(['product', 'comments', 'sort' => 'top', 'votedIds' => []])
 {{-- Product comments: one level of replies; the maker's own replies are labelled. --}}
 @php
     $total = $comments->sum(fn ($c) => 1 + $c->replies->count());
@@ -7,6 +7,12 @@
 <section id="comments" class="mt-12 scroll-mt-24">
     <h2 class="group-header !px-0">
         <span>Comments <span class="ml-1 font-normal tabular-nums text-ink-2">{{ $total }}</span></span>
+        @if ($comments->count() > 1)
+            <span class="segmented !text-xs">
+                <a href="{{ route('product', $product) }}#comments" @if ($sort === 'top') aria-current="page" @endif>Top</a>
+                <a href="{{ route('product', [$product, 'comments' => 'new']) }}#comments" @if ($sort === 'new') aria-current="page" @endif>Newest</a>
+            </span>
+        @endif
     </h2>
 
     {{-- New comment --}}
@@ -33,12 +39,12 @@
         <ul class="mt-4 space-y-3">
             @foreach ($comments as $comment)
                 <li class="card p-4" id="comment-{{ $comment->id }}">
-                    @include('partials.comment', ['comment' => $comment, 'product' => $product])
+                    @include('partials.comment', ['comment' => $comment, 'product' => $product, 'votedIds' => $votedIds])
 
                     @if ($comment->replies->isNotEmpty())
                         <ul class="mt-4 space-y-4 border-l border-line pl-4">
                             @foreach ($comment->replies as $reply)
-                                <li id="comment-{{ $reply->id }}">@include('partials.comment', ['comment' => $reply, 'product' => $product])</li>
+                                <li id="comment-{{ $reply->id }}">@include('partials.comment', ['comment' => $reply, 'product' => $product, 'votedIds' => $votedIds])</li>
                             @endforeach
                         </ul>
                     @endif

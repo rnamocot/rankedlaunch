@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\User;
+use App\Models\Vote;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class HomeController extends Controller
 {
@@ -11,13 +16,19 @@ class HomeController extends Controller
     {
         $with = ['category'];
 
-        $today = Product::live()->whereDate('launch_date', today())->with($with)->ranked()->get();
+        $today = Product::live()->whereDate('launch_date', today())->with($with)->withCount('comments')->ranked()->get();
 
-        // Tomorrow's lineup: approved launches scheduled for tomorrow (shown as a teaser, no links yet).
-        $tomorrow = Product::with($with)->where('status', 'approved')->whereDate('launch_date', today()->addDay())->orderBy('id')->get();
+        // Earlier days, newest first: yesterday's top five, then "Show more" loads older days.
+        $yesterday = Product::live()->whereDate('launch_date', today()->subDay())->with($with)->withCount('comments')->ranked()->get();
+        $nextDay = self::previousLaunchDay(today()->subDay());
 
-        // Before the first launch of the day lands, keep the page useful.
-        $yesterday = Product::live()->whereDate('launch_date', today()->subDay())->with($with)->ranked()->limit(20)->get();
+        // Sidebar: what's coming up, with "Notify me".
+        $upcoming = Product::upcoming()->with($with)->orderBy('launch_date')->orderBy('id')->limit(5)->get();
+        $remindedIds = auth()->check()
+            ? auth()->user()->launchReminders()->whereIn('product_id', $upcoming->modelKeys())->pluck('product_id')->flip()->all()
+            : [];
+        $upcomingTotal = Product::upcoming()->count();
+        $topMakers = LeaderboardController::topMakers(today()->startOfMonth(), 3);
 
         // Fair rotation, launch-day Pro apps first (see Product::featuredRotation).
         $featured = Product::featuredRotation();
@@ -42,11 +53,36 @@ class HomeController extends Controller
 
         $heroStats = [
             'Launching today' => $today->count(),
-            'Upvotes today' => \App\Models\Vote::where('created_at', '>=', today())->count(),
-            'Makers' => \App\Models\User::has('products')->count(),
+            'Upvotes today' => Vote::where('created_at', '>=', today())->count(),
+            'Makers' => User::has('products')->count(),
         ];
 
-        return view('home', compact('today', 'yesterday', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats', 'spotlight', 'tomorrow'));
+        return view('home', compact('today', 'yesterday', 'nextDay', 'featured', 'featuredTotal', 'week', 'categories', 'pulse', 'heroStats', 'spotlight', 'upcoming', 'upcomingTotal', 'remindedIds', 'topMakers'));
+    }
+
+    /** One earlier launch day for the homepage feed's "Show more" button. */
+    public function day(string $date): JsonResponse
+    {
+        $day = Carbon::parse($date)->startOfDay();
+        abort_unless($day->lt(today()), 404);
+
+        $products = Product::live()->whereDate('launch_date', $day)->with('category')->withCount('comments')->ranked()->get();
+        abort_if($products->isEmpty(), 404);
+
+        $next = self::previousLaunchDay($day);
+
+        return response()->json([
+            'html' => view('partials.feed-day', ['day' => $day, 'products' => $products])->render(),
+            'next' => $next?->toDateString(),
+        ]);
+    }
+
+    /** The closest day before $before that had live launches, if any. */
+    public static function previousLaunchDay(Carbon $before): ?Carbon
+    {
+        $date = Product::live()->whereDate('launch_date', '<', $before)->max('launch_date');
+
+        return $date ? Carbon::parse($date)->startOfDay() : null;
     }
 
     /**
@@ -67,7 +103,7 @@ class HomeController extends Controller
             ])
             ->sortByDesc('count')->values()->take(8)->all();
 
-        $latest = \App\Models\Vote::with('product:id,name,slug')
+        $latest = Vote::with('product:id,name,slug')
             ->whereIn('product_id', $todayIds)
             ->latest()->limit(6)->get()
             ->filter(fn ($v) => $v->product)
@@ -83,7 +119,7 @@ class HomeController extends Controller
     /** Today's top launches for the homepage banner, refreshed by the browser every ~20s. */
     public function liveToday()
     {
-        $top = \Illuminate\Support\Facades\Cache::remember('live-today', 10, fn () => Product::live()
+        $top = Cache::remember('live-today', 10, fn () => Product::live()
             ->with('category')
             ->whereDate('launch_date', today())
             ->ranked()
@@ -100,7 +136,7 @@ class HomeController extends Controller
             ])
             ->all());
 
-        $pulse = \Illuminate\Support\Facades\Cache::remember('live-pulse', 10, fn () => self::pulse());
+        $pulse = Cache::remember('live-pulse', 10, fn () => self::pulse());
 
         return response()->json(['top' => $top] + $pulse)->header('Cache-Control', 'no-store');
     }

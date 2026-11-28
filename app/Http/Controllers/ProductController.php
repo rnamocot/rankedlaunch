@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Comment;
+use App\Models\CommentVote;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductController extends Controller
 {
@@ -20,9 +23,30 @@ class ProductController extends Controller
         }
 
         $product->load('category', 'user');
+
+        // Comments: most upvoted first by default, or newest.
+        $commentSort = $request->query('comments') === 'new' ? 'new' : 'top';
         $comments = $product->isLive()
-            ? \App\Models\Comment::with('user', 'replies.user')->where('product_id', $product->id)->whereNull('parent_id')->latest()->get()
+            ? Comment::with('user', 'replies.user')
+                ->where('product_id', $product->id)->whereNull('parent_id')
+                ->when($commentSort === 'top', fn ($q) => $q->orderByDesc('votes_count'))
+                ->latest()
+                ->get()
             : collect();
+
+        $commentVotedIds = $user && $comments->isNotEmpty()
+            ? CommentVote::where('user_id', $user->id)
+                ->whereIn('comment_id', $comments->pluck('id')->merge($comments->flatMap->replies->pluck('id')))
+                ->pluck('comment_id')->flip()->all()
+            : [];
+
+        $maker = $product->user;
+        $makerStats = $maker ? [
+            'launches' => $maker->products()->live()->count(),
+            'upvotes' => (int) $maker->products()->live()->sum('votes_count'),
+        ] : null;
+
+        $launch = $product->launch_date;
 
         $related = Product::live()
             ->where('category_id', $product->category_id)
@@ -36,8 +60,14 @@ class ProductController extends Controller
             'isOwner' => $isOwner,
             'dailyRank' => $product->dailyRank(),
             'weeklyRank' => $product->weeklyRank(),
+            'monthlyRank' => $launch ? $product->rankBetween($launch->copy()->startOfMonth(), $launch->copy()->endOfMonth()) : null,
+            'award' => $product->award(),
+            'isSaved' => $user && $product->bookmarks()->where('user_id', $user->id)->exists(),
             'related' => $related,
             'comments' => $comments,
+            'commentSort' => $commentSort,
+            'commentVotedIds' => $commentVotedIds,
+            'makerStats' => $makerStats,
         ]);
     }
 
@@ -78,10 +108,10 @@ class ProductController extends Controller
     /** Per-day counters behind the maker dashboard charts. */
     private function bumpDaily(Product $product, string $column): void
     {
-        \Illuminate\Support\Facades\DB::table('product_daily_stats')->upsert(
+        DB::table('product_daily_stats')->upsert(
             [['product_id' => $product->id, 'date' => today()->toDateString(), $column => 1]],
             ['product_id', 'date'],
-            [$column => \Illuminate\Support\Facades\DB::raw("{$column} + 1")],
+            [$column => DB::raw("{$column} + 1")],
         );
     }
 }

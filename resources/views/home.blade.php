@@ -60,39 +60,27 @@
         </section>
     </div>
 
-    {{-- Showcase: today's board inside a tray --}}
-    <section class="mx-auto max-w-6xl px-4 sm:px-6">
-        <div class="tray" data-reveal>
+    {{-- Feed: today's board, then earlier days. Sidebar: this week, upcoming, top makers, categories. --}}
+    <section class="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-10">
+        <div class="min-w-0" data-feed>
             @php($boardCategories = $today->pluck('category')->filter()->unique('id')->sortBy('name')->values())
-            <div data-board class="contents">
-            <div class="flex flex-wrap items-center justify-between gap-3 px-3 pt-2 pb-3 sm:px-4">
-                <div class="segmented" role="tablist" aria-label="Launch day">
-                    @foreach (['yesterday' => 'Yesterday', 'today' => 'Today', 'tomorrow' => 'Tomorrow'] as $key => $label)
-                        <button type="button" role="tab" data-board-tab="{{ $key }}" aria-selected="{{ $key === 'today' ? 'true' : 'false' }}"
-                                class="rounded-lg px-3.5 py-1.5 text-[0.8125rem] font-medium aria-selected:bg-surface aria-selected:font-semibold aria-selected:text-ink aria-selected:shadow-sm aria-[selected=false]:text-ink-2">
-                            {{ $label }}
-                            @if ($key === 'tomorrow' && $tomorrow->isNotEmpty())<span class="tabular-nums text-ink-3">{{ $tomorrow->count() }}</span>@endif
-                        </button>
-                    @endforeach
+            <div data-board>
+                <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 px-1 pb-3">
+                    <h2 class="title-2">Launching today</h2>
+                    <span class="text-[0.8125rem] text-ink-2">Voting closes in <span class="font-semibold tabular-nums text-ink" data-countdown="{{ today('UTC')->addDay()->toIso8601String() }}">--:--:--</span></span>
                 </div>
-                <span class="text-[0.8125rem] text-ink-2" data-board-note="today">Voting closes in <span class="font-semibold tabular-nums text-ink" data-countdown="{{ today('UTC')->addDay()->toIso8601String() }}">--:--:--</span></span>
-                <span class="text-[0.8125rem] text-ink-2" data-board-note="yesterday" hidden>Final ranking · {{ today()->subDay()->format('l, M j') }}</span>
-                <span class="text-[0.8125rem] text-ink-2" data-board-note="tomorrow" hidden>Goes live at <x-local-time :at="today('UTC')->addDay()" /></span>
-            </div>
 
-            @if ($boardCategories->count() > 1)
-                <div class="-mx-0 flex gap-1.5 overflow-x-auto px-3 pb-3 sm:px-4" data-board-filters data-board-note="today" aria-label="Filter by category">
-                    <button type="button" data-filter="" aria-pressed="true" class="chip !h-8 shrink-0 !pl-3 !text-xs aria-pressed:!bg-ink aria-pressed:!text-on-ink">All <span class="tabular-nums opacity-60">{{ $today->count() }}</span></button>
-                    @foreach ($boardCategories as $c)
-                        <button type="button" data-filter="{{ $c->slug }}" aria-pressed="false" class="chip !h-8 shrink-0 !pl-3 !text-xs aria-pressed:!bg-ink aria-pressed:!text-on-ink">{{ $c->name }} <span class="tabular-nums opacity-60">{{ $today->where('category_id', $c->id)->count() }}</span></button>
-                    @endforeach
-                </div>
-            @endif
+                @if ($boardCategories->count() > 1)
+                    <div class="flex gap-1.5 overflow-x-auto px-1 pb-3" data-board-filters aria-label="Filter by category">
+                        <button type="button" data-filter="" aria-pressed="true" class="chip !h-8 shrink-0 !pl-3 !text-xs aria-pressed:!bg-ink aria-pressed:!text-on-ink">All <span class="tabular-nums opacity-60">{{ $today->count() }}</span></button>
+                        @foreach ($boardCategories as $c)
+                            <button type="button" data-filter="{{ $c->slug }}" aria-pressed="false" class="chip !h-8 shrink-0 !pl-3 !text-xs aria-pressed:!bg-ink aria-pressed:!text-on-ink">{{ $c->name }} <span class="tabular-nums opacity-60">{{ $today->where('category_id', $c->id)->count() }}</span></button>
+                        @endforeach
+                    </div>
+                @endif
 
-            <div class="grid grid-cols-1 gap-1.5 lg:grid-cols-[minmax(0,1fr)_19rem]">
-                <div class="card overflow-hidden">
-                    {{-- Today --}}
-                    <div data-board-panel="today">
+                <div class="tray" data-reveal>
+                    <div class="card overflow-hidden">
                         @if ($today->isNotEmpty())
                             <ol>
                                 @foreach ($today as $i => $product)
@@ -108,96 +96,107 @@
                             </div>
                         @endif
                     </div>
-
-                    {{-- Yesterday: final ranking --}}
-                    <div data-board-panel="yesterday" hidden>
-                        @if ($yesterday->isNotEmpty())
-                            <ol>
-                                @foreach ($yesterday as $i => $product)
-                                    <x-product-row :product="$product" :rank="$i + 1" :voted-ids="$votedIds" />
-                                @endforeach
-                            </ol>
-                            <a href="{{ route('rankings', 'week') }}" class="block border-t border-line px-5 py-3 text-center text-sm font-medium text-ink-2 hover:text-ink">Full results this week</a>
-                        @else
-                            <p class="px-6 py-14 text-center text-sm text-ink-2">No launches yesterday.</p>
-                        @endif
-                    </div>
-
-                    {{-- Tomorrow: lineup teaser (pages go live with the launch) --}}
-                    <div data-board-panel="tomorrow" hidden>
-                        @if ($tomorrow->isNotEmpty())
-                            <p class="border-b border-line px-5 py-3 text-sm text-ink-2"><span class="font-semibold text-ink">{{ $tomorrow->count() }} {{ Str::plural('launch', $tomorrow->count()) }}</span> scheduled for {{ today()->addDay()->format('l, M j') }}. Voting opens when they go live.</p>
-                            <ul>
-                                @foreach ($tomorrow as $product)
-                                    <li class="list-row flex items-center gap-4 px-4 py-3.5 sm:px-5" style="--inset: 5rem">
-                                        <span class="app-icon size-12"><img src="{{ $product->logoUrl() }}" alt="" loading="lazy"></span>
-                                        <span class="min-w-0 flex-1">
-                                            <span class="block truncate text-[0.9375rem] font-semibold">{{ $product->name }}</span>
-                                            <span class="block truncate text-sm text-ink-2">{{ $product->tagline }}</span>
-                                            @if ($product->category)<span class="meta mt-1 flex"><span>{{ $product->category->name }}</span></span>@endif
-                                        </span>
-                                        <span class="shrink-0 text-xs font-medium text-ink-2">Tomorrow</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @else
-                            <div class="px-6 py-14 text-center">
-                                <p class="font-semibold">Nothing scheduled for tomorrow yet</p>
-                                <p class="mt-1 text-sm text-ink-2">Pick tomorrow as your launch day and lead the board.</p>
-                                <a href="{{ route('submit') }}" class="btn btn-primary btn-sm mt-5">Launch tomorrow</a>
-                            </div>
-                        @endif
-                    </div>
                 </div>
+            </div>
 
-                <div class="card overflow-hidden">
+            @if ($yesterday->isNotEmpty())
+                @include('partials.feed-day', ['day' => today()->subDay(), 'products' => $yesterday])
+            @endif
+
+            <div data-feed-more>
+                @if ($nextDay)
+                    <button type="button" class="btn btn-outline mt-8 w-full" data-feed-next="{{ route('home.day', $nextDay->toDateString()) }}">
+                        Show earlier launches
+                    </button>
+                @endif
+            </div>
+        </div>
+
+        <aside class="space-y-6 lg:sticky lg:top-20 lg:self-start" aria-label="More on RankedLaunch">
+            {{-- Top this week --}}
+            <section class="card overflow-hidden">
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                    <h2 class="text-sm font-semibold">Top this week</h2>
+                    <a href="{{ route('rankings', 'week') }}" class="text-xs font-medium text-ink-2 hover:text-ink">See all</a>
+                </div>
+                <ol>
+                    @forelse ($week as $i => $product)
+                        <li class="list-row" style="--inset: 3.5rem">
+                            <a href="{{ route('product', $product) }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-2">
+                                <span class="w-4 text-sm font-semibold tabular-nums {{ $i < 3 ? 'text-ink' : 'text-ink-3' }}">{{ $i + 1 }}</span>
+                                <span class="app-icon size-8"><img src="{{ $product->logoUrl() }}" alt="" loading="lazy"></span>
+                                <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ $product->name }}</span>
+                                <span class="flex items-center gap-0.5 text-xs font-medium tabular-nums text-ink-2">
+                                    <x-icon name="chevron-up" :size="13" :stroke="2.25" />{{ $product->votes_count }}
+                                </span>
+                            </a>
+                        </li>
+                    @empty
+                        <li class="px-4 pb-5 pt-2 text-sm text-ink-2">No launches yet this week.</li>
+                    @endforelse
+                </ol>
+                <p class="mx-4 mt-2 mb-4 rounded-xl bg-fill px-3.5 py-3 text-xs leading-relaxed text-ink-2"><span class="font-semibold text-ink">Top 5 win awards.</span> Day, week, month and year, with a badge for your site.</p>
+            </section>
+
+            {{-- Coming up --}}
+            <section class="card overflow-hidden">
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                    <h2 class="text-sm font-semibold">Coming up</h2>
+                    <a href="{{ route('upcoming') }}" class="text-xs font-medium text-ink-2 hover:text-ink">{{ $upcomingTotal > 0 ? 'All '.$upcomingTotal : 'Upcoming' }}</a>
+                </div>
+                <ul>
+                    @forelse ($upcoming as $product)
+                        <li class="list-row flex items-center gap-3 px-4 py-2.5" style="--inset: 3.5rem">
+                            <span class="app-icon size-8"><img src="{{ $product->logoUrl() }}" alt="" loading="lazy"></span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-sm font-medium">{{ $product->name }}</span>
+                                <span class="block truncate text-xs text-ink-2">{{ $product->launch_date->isTomorrow() ? 'Tomorrow' : $product->launch_date->format('D, M j') }}</span>
+                            </span>
+                            <x-toggle-button :url="route('remind', $product)" :active="isset($remindedIds[$product->id])" icon="bell" on="On" off="Notify" :label="'Notify me when '.$product->name.' launches'" class="toggle-btn-sm" />
+                        </li>
+                    @empty
+                        <li class="px-4 pb-4 pt-1 text-sm text-ink-2">Nothing scheduled yet. <a href="{{ route('submit') }}" class="font-medium text-ink underline decoration-ink-3 underline-offset-4">Book tomorrow</a></li>
+                    @endforelse
+                </ul>
+                <div class="h-2"></div>
+            </section>
+
+            {{-- Top makers this month --}}
+            @if ($topMakers->isNotEmpty())
+                <section class="card overflow-hidden">
                     <div class="flex items-center justify-between px-4 pt-4 pb-2">
-                        <span class="text-sm font-semibold">Top this week</span>
-                        <a href="{{ route('rankings', 'week') }}" class="text-xs font-medium text-ink-2 hover:text-ink">See all</a>
+                        <h2 class="text-sm font-semibold">Top makers this month</h2>
+                        <a href="{{ route('leaderboard') }}" class="text-xs font-medium text-ink-2 hover:text-ink">Leaderboard</a>
                     </div>
-                    <ol>
-                        @forelse ($week as $i => $product)
+                    <ol class="pb-2">
+                        @foreach ($topMakers as $maker)
                             <li class="list-row" style="--inset: 3.5rem">
-                                <a href="{{ route('product', $product) }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-2">
-                                    <span class="w-4 text-sm font-semibold tabular-nums {{ $i < 3 ? 'text-ink' : 'text-ink-3' }}">{{ $i + 1 }}</span>
-                                    <span class="app-icon size-8"><img src="{{ $product->logoUrl() }}" alt="" loading="lazy"></span>
-                                    <span class="min-w-0 flex-1 truncate text-sm font-medium">{{ $product->name }}</span>
-                                    <span class="flex items-center gap-0.5 text-xs font-medium tabular-nums text-ink-2">
-                                        <x-icon name="chevron-up" :size="13" :stroke="2.25" />{{ $product->votes_count }}
+                                <a href="{{ $maker->profileUrl() }}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-2">
+                                    <x-avatar :user="$maker" class="size-8 text-xs" />
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block truncate text-sm font-medium">{{ $maker->name }}</span>
+                                        <span class="block truncate text-xs text-ink-2">{{ $maker->launches }} {{ Str::plural('launch', $maker->launches) }}</span>
                                     </span>
+                                    <span class="text-xs font-medium tabular-nums text-ink-2">{{ number_format((int) $maker->earned) }} upvotes</span>
                                 </a>
                             </li>
-                        @empty
-                            <li class="px-4 py-6 text-center text-sm text-ink-2">No launches yet this week.</li>
-                        @endforelse
+                        @endforeach
                     </ol>
-                    <div class="m-4 mt-3 rounded-xl bg-fill p-4">
-                        <p class="text-sm font-semibold">Top 5 get a winner badge</p>
-                        <p class="mt-1 text-xs leading-relaxed text-ink-2">Top 5 of each day, week, month and year earn a badge for their site.</p>
-                    </div>
-                </div>
-            </div>
-            </div>
-        </div>
-    </section>
+                </section>
+            @endif
 
-    {{-- Search + category chips --}}
-    <section class="mx-auto mt-12 max-w-4xl px-4 text-center sm:px-6" data-reveal>
-        <form method="GET" action="{{ route('discover') }}" class="relative mx-auto mb-8 max-w-lg" role="search">
-            <x-icon name="search" :size="18" class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-2" />
-            <label for="home-search" class="sr-only">Search tools</label>
-            <input id="home-search" name="q" placeholder="Search {{ number_format(\App\Models\Product::live()->count()) }} tools" class="input !h-12 !rounded-xl bg-surface !pl-11 !pr-24 shadow-[inset_0_0_0_1px_var(--line)]">
-            <button class="btn btn-primary btn-sm absolute top-1/2 right-2 -translate-y-1/2">Search</button>
-        </form>
-        <p class="text-sm text-ink-2">Browse by category</p>
-        <div class="mt-4 flex flex-wrap justify-center gap-2">
-            @foreach ($categories as $category)
-                <a href="{{ route('category', $category) }}" class="chip !pl-3.5">
-                    {{ $category->name }} <span class="tabular-nums text-ink-3">{{ $category->products_count }}</span>
-                </a>
-            @endforeach
-            <a href="{{ route('discover') }}" class="chip !pl-3.5 font-semibold">All categories <x-icon name="arrow-right" :size="13" :stroke="2" /></a>
-        </div>
+            {{-- Categories --}}
+            @if ($categories->isNotEmpty())
+                <section>
+                    <h2 class="group-header">Browse categories</h2>
+                    <div class="flex flex-wrap gap-1.5">
+                        @foreach ($categories->take(10) as $category)
+                            <a href="{{ route('category', $category) }}" class="chip !h-8 !pl-3 !text-xs">{{ $category->name }} <span class="tabular-nums text-ink-3">{{ $category->products_count }}</span></a>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
+        </aside>
     </section>
 
     <div class="hairline mx-auto mt-20 max-w-6xl"></div>

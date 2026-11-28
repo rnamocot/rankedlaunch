@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureNotBanned;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\TrackStreak;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,9 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Hostinger serves the site through its own front proxy; trust it so HTTPS is detected.
         $middleware->trustProxies(at: '*');
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
-        $middleware->web(append: [\App\Http\Middleware\EnsureNotBanned::class]);
-        $middleware->alias(['admin' => \App\Http\Middleware\EnsureAdmin::class]);
+        $middleware->append(SecurityHeaders::class);
+        $middleware->web(append: [EnsureNotBanned::class, TrackStreak::class]);
+        $middleware->alias(['admin' => EnsureAdmin::class]);
         // Beacons can't send a CSRF token; the click endpoint only bumps a counter.
         $middleware->preventRequestForgery(except: ['webhooks/*', 'apps/*/click']);
         // New makers who click "Submit" should land on sign-up, not "Welcome back".

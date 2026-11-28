@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\Comment;
 use App\Models\Product;
+use App\Notifications\CommentReplied;
+use App\Notifications\ProductCommented;
 use App\Services\ChatModerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -48,7 +50,26 @@ class CommentController extends Controller
             'body' => $body,
         ]);
 
+        $this->notifyAbout($comment, $parent ?? null);
+
         return redirect()->to(route('product', $product).'#comment-'.$comment->id)->with('status', 'Comment posted.');
+    }
+
+    /** The parent comment's author gets "replied"; the maker gets "commented" (once, never for their own words). */
+    private function notifyAbout(Comment $comment, ?Comment $parent): void
+    {
+        $comment->load('user', 'product.user');
+        $maker = $comment->product->user;
+        $notified = [$comment->user_id];
+
+        if ($parent && $parent->user && ! in_array($parent->user_id, $notified, true)) {
+            $parent->user->notify(new CommentReplied($comment));
+            $notified[] = $parent->user_id;
+        }
+
+        if ($maker && ! in_array($maker->id, $notified, true)) {
+            $maker->notify(new ProductCommented($comment));
+        }
     }
 
     public function destroy(Request $request, Comment $comment)

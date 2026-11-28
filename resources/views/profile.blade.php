@@ -39,10 +39,10 @@
             </div>
         </div>
 
-        <dl class="mt-10 grid grid-cols-3 gap-3">
+        <dl class="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
             @foreach ($stats as $label => $value)
                 <div class="card p-4 text-center">
-                    <dd class="text-[1.75rem] font-bold tabular-nums tracking-[-0.03em]">{{ number_format($value) }}</dd>
+                    <dd class="flex items-center justify-center gap-1 text-[1.75rem] font-bold tabular-nums tracking-[-0.03em]">@if ($label === 'Day streak' && $value > 0)<x-icon name="flame" :size="22" class="text-[var(--accent)]" />@endif{{ number_format($value) }}</dd>
                     <dt class="text-xs text-ink-2">{{ $label }}</dt>
                 </div>
             @endforeach
@@ -81,5 +81,21 @@
                 <div class="card px-6 py-12 text-center text-sm text-ink-2">No launches yet.</div>
             @endif
         </section>
+        @if (auth()->id() === $maker->id)
+            <section data-reveal>
+                <h2 class="group-header"><span>Saved</span><span class="text-[0.8125rem] font-normal text-ink-2">Only you can see this</span></h2>
+                @if ($saved->isNotEmpty())
+                    <div class="tray">
+                        <ul class="card overflow-hidden">
+                            @foreach ($saved as $product)
+                                <x-product-row :product="$product" :voted-ids="$votedIds" />
+                            @endforeach
+                        </ul>
+                    </div>
+                @else
+                    <div class="card px-6 py-10 text-center text-sm text-ink-2">Tap <span class="font-medium text-ink">Save</span> on any product page to keep it here.</div>
+                @endif
+            </section>
+        @endif
     </div>
 </x-layout>

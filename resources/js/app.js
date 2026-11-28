@@ -250,15 +250,6 @@ document.querySelectorAll('[data-rank-demo]').forEach((demo) => {
     }).observe(demo);
 });
 
-// Press "/" anywhere to search (skipped while typing in a field).
-document.addEventListener('keydown', (event) => {
-    if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
-    if (event.target.closest('input, textarea, select, [contenteditable]')) return;
-    event.preventDefault();
-    const field = document.querySelector('#q, #home-search');
-    if (field) field.focus();
-    else window.location.href = '/discover';
-});
 
 // Homepage banner with real data: poll today's top 4, animate rank changes,
 // pop "+1" on new votes, and cycle the latest-upvote ticker.
@@ -840,28 +831,268 @@ document.querySelectorAll('canvas[data-particles]').forEach((canvas) => {
     });
 });
 
-// Homepage board: Yesterday / Today / Tomorrow tabs and category filter chips.
+// Homepage board: category filter chips for today's launches.
 document.querySelectorAll('[data-board]').forEach((board) => {
-    const tabs = board.querySelectorAll('[data-board-tab]');
-    const show = (key) => {
-        tabs.forEach((t) => t.setAttribute('aria-selected', t.dataset.boardTab === key ? 'true' : 'false'));
-        board.querySelectorAll('[data-board-panel]').forEach((p) => (p.hidden = p.dataset.boardPanel !== key));
-        board.querySelectorAll('[data-board-note]').forEach((n) => (n.hidden = n.dataset.boardNote !== key));
-    };
-    tabs.forEach((t) => t.addEventListener('click', () => show(t.dataset.boardTab)));
-
     const chips = board.querySelectorAll('[data-filter]');
-    const todayPanel = board.querySelector('[data-board-panel="today"]');
     chips.forEach((chip) => chip.addEventListener('click', () => {
         const slug = chip.dataset.filter;
         chips.forEach((c) => c.setAttribute('aria-pressed', c === chip ? 'true' : 'false'));
         let shown = 0;
-        todayPanel.querySelectorAll('li[data-category]').forEach((row) => {
+        board.querySelectorAll('li[data-category]').forEach((row) => {
             const match = !slug || row.dataset.category === slug;
             row.hidden = !match;
             if (match) shown++;
         });
-        const empty = todayPanel.querySelector('[data-board-empty]');
+        const empty = board.querySelector('[data-board-empty]');
         if (empty) empty.hidden = shown > 0;
     }));
+});
+
+// Signed-in toggles (Save, Notify me, comment upvotes): POST, then flip aria-pressed and any count.
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-toggle-url]');
+    if (!button) return;
+    event.preventDefault();
+
+    if (button.dataset.login) {
+        window.location.href = button.dataset.login;
+        return;
+    }
+    if (button.dataset.busy) return;
+    button.dataset.busy = '1';
+
+    try {
+        const response = await fetch(button.dataset.toggleUrl, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrf(), Accept: 'application/json' },
+        });
+        if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+        if (!response.ok) return;
+
+        const { active, count } = await response.json();
+        document.querySelectorAll(`[data-toggle-url="${CSS.escape(button.dataset.toggleUrl)}"]`).forEach((el) => {
+            el.setAttribute('aria-pressed', active ? 'true' : 'false');
+            const counter = el.querySelector('[data-count]');
+            if (counter && count !== undefined) counter.textContent = count;
+        });
+    } finally {
+        delete button.dataset.busy;
+    }
+});
+
+// Popovers (notifications): toggle on click, close on outside click or Escape.
+// Opening the bell marks notifications read once.
+document.querySelectorAll('[data-popover]').forEach((root) => {
+    const toggle = root.querySelector('[data-popover-toggle]');
+    const panel = root.querySelector('[data-popover-panel]');
+    const setOpen = (open) => {
+        panel.hidden = !open;
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open && toggle.dataset.readUrl) {
+            fetch(toggle.dataset.readUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf(), Accept: 'application/json' } });
+            toggle.dataset.readUrl = '';
+            root.querySelector('[data-unread]')?.remove();
+        }
+    };
+    toggle.addEventListener('click', () => setOpen(panel.hidden));
+    document.addEventListener('click', (event) => { if (!root.contains(event.target)) setOpen(false); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') setOpen(false); });
+});
+
+// Homepage feed: "Show all" inside a day, and "Show earlier launches" loads older days.
+document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-show-all]');
+    if (!button) return;
+    button.closest('[data-feed-day]').querySelectorAll('[data-more]').forEach((row) => (row.hidden = false));
+    button.remove();
+});
+
+document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-feed-next]');
+    if (!button || button.dataset.busy) return;
+    button.dataset.busy = '1';
+    const label = button.textContent;
+    button.textContent = 'Loading…';
+
+    try {
+        const response = await fetch(button.dataset.feedNext, { headers: { Accept: 'application/json' } });
+        if (!response.ok) throw new Error('Feed request failed');
+        const { html, next } = await response.json();
+        button.closest('[data-feed-more]').insertAdjacentHTML('beforebegin', html);
+        if (next) {
+            button.dataset.feedNext = button.dataset.feedNext.replace(/\d{4}-\d{2}-\d{2}$/, next);
+            button.textContent = label;
+        } else {
+            button.remove();
+        }
+    } catch {
+        button.textContent = label;
+    } finally {
+        delete button.dataset.busy;
+    }
+});
+
+// Search palette: Ctrl/Cmd+K or "/" anywhere. Debounced results for apps, categories and makers.
+document.querySelectorAll('[data-search-palette]').forEach((palette) => {
+    const input = palette.querySelector('[data-search-input]');
+    const results = palette.querySelector('[data-search-results]');
+    const hint = results.innerHTML;
+    let active = -1;
+    let timer;
+    let lastQuery = '';
+    let controller;
+
+    const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+    const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => entities[c]);
+    const items = () => [...results.querySelectorAll('[role="option"]')];
+
+    const open = () => {
+        palette.hidden = false;
+        document.documentElement.style.overflow = 'hidden';
+        input.focus();
+        input.select();
+    };
+    const close = () => {
+        palette.hidden = true;
+        document.documentElement.style.overflow = '';
+    };
+
+    const highlight = (index) => {
+        const list = items();
+        active = list.length ? (index + list.length) % list.length : -1;
+        list.forEach((el, i) => el.setAttribute('aria-selected', i === active ? 'true' : 'false'));
+        list[active]?.scrollIntoView({ block: 'nearest' });
+    };
+
+    const gridIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.75"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.75"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.75"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.75"/></svg>';
+
+    const row = (item, kind) => {
+        let media;
+        if (kind === 'categories') {
+            media = `<span class="grid size-9 shrink-0 place-items-center rounded-[0.6rem] bg-fill text-ink-2">${gridIcon}</span>`;
+        } else if (item.image) {
+            media = `<img src="${escapeHtml(item.image)}" alt="" class="size-9 shrink-0 ${kind === 'makers' ? 'rounded-full' : 'rounded-[0.6rem]'} object-cover outline outline-1 -outline-offset-1 outline-line">`;
+        } else {
+            media = `<span class="grid size-9 shrink-0 place-items-center rounded-full bg-fill text-xs font-semibold">${escapeHtml(item.initials)}</span>`;
+        }
+        const meta = item.votes !== undefined ? `<span class="shrink-0 text-xs font-medium tabular-nums text-ink-2">${item.votes} upvotes</span>` : '';
+        const sub = item.sub ? `<span class="block truncate text-xs text-ink-2">${escapeHtml(item.sub)}</span>` : '';
+        return `<a role="option" aria-selected="false" href="${escapeHtml(item.url)}" class="search-option flex items-center gap-3 px-4 py-2">${media}<span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">${escapeHtml(item.name)}</span>${sub}</span>${meta}</a>`;
+    };
+
+    const render = (data, query) => {
+        const groups = [['apps', 'Apps'], ['categories', 'Categories'], ['makers', 'Makers']]
+            .filter(([key]) => data[key]?.length)
+            .map(([key, title]) => `<p class="px-4 pt-2 pb-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-3">${title}</p>${data[key].map((item) => row(item, key)).join('')}`);
+        const everything = `<a role="option" aria-selected="false" href="${palette.dataset.discover}?q=${encodeURIComponent(query)}" class="search-option flex items-center gap-3 px-4 py-2.5 text-sm text-ink-2"><span class="grid size-9 shrink-0 place-items-center text-base">↵</span>Search everything for “${escapeHtml(query)}”</a>`;
+        results.innerHTML = groups.length
+            ? `${groups.join('')}<div class="mt-1 border-t border-line pt-1">${everything}</div>`
+            : `<p class="px-4 pt-5 pb-2 text-center text-sm text-ink-2">No matches for “${escapeHtml(query)}”.</p>${everything}`;
+        input.setAttribute('aria-expanded', 'true');
+        highlight(0);
+    };
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const query = input.value.trim();
+        if (query.length < 2) {
+            results.innerHTML = hint;
+            active = -1;
+            lastQuery = '';
+            input.setAttribute('aria-expanded', 'false');
+            return;
+        }
+        timer = setTimeout(async () => {
+            if (query === lastQuery) return;
+            lastQuery = query;
+            controller?.abort();
+            controller = new AbortController();
+            try {
+                const response = await fetch(`${palette.dataset.url}?q=${encodeURIComponent(query)}`, { headers: { Accept: 'application/json' }, signal: controller.signal });
+                if (response.ok && input.value.trim() === query) render(await response.json(), query);
+            } catch {
+                // aborted or offline
+            }
+        }, 160);
+    });
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowDown') { event.preventDefault(); highlight(active + 1); }
+        if (event.key === 'ArrowUp') { event.preventDefault(); highlight(active - 1); }
+    });
+
+    palette.querySelector('[data-search-form]').addEventListener('submit', (event) => {
+        event.preventDefault();
+        const chosen = items()[active];
+        const query = input.value.trim();
+        if (chosen) window.location.href = chosen.href;
+        else if (query) window.location.href = `${palette.dataset.discover}?q=${encodeURIComponent(query)}`;
+    });
+
+    results.addEventListener('mousemove', (event) => {
+        const option = event.target.closest('[role="option"]');
+        if (option && option.getAttribute('aria-selected') !== 'true') highlight(items().indexOf(option));
+    });
+
+    palette.querySelectorAll('[data-search-close]').forEach((el) => el.addEventListener('click', close));
+
+    document.addEventListener('click', (event) => {
+        const trigger = event.target.closest('[data-search-open]');
+        if (!trigger) return;
+        event.preventDefault();
+        open();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !palette.hidden) {
+            close();
+            return;
+        }
+        const typing = event.target.closest('input, textarea, select, [contenteditable]');
+        const isShortcut = (event.key === 'k' || event.key === 'K') && (event.metaKey || event.ctrlKey);
+        if (isShortcut || (event.key === '/' && !typing && !event.metaKey && !event.ctrlKey && !event.altKey)) {
+            event.preventDefault();
+            if (palette.hidden) open();
+            else close();
+        }
+    });
+});
+
+// Product gallery: thumbnails swap the main image; clicking the main image opens a lightbox.
+document.querySelectorAll('[data-gallery]').forEach((gallery) => {
+    const main = gallery.querySelector('[data-gallery-main]');
+    const thumbs = [...gallery.querySelectorAll('[data-gallery-thumb]')];
+    const lightbox = gallery.querySelector('[data-lightbox]');
+    const lightboxImage = lightbox?.querySelector('img');
+    let index = 0;
+
+    const show = (i) => {
+        if (!thumbs.length) return;
+        index = (i + thumbs.length) % thumbs.length;
+        main.src = thumbs[index].dataset.galleryThumb;
+        if (lightboxImage) lightboxImage.src = main.src;
+        thumbs.forEach((t, n) => t.setAttribute('aria-current', n === index ? 'true' : 'false'));
+    };
+    const setLightbox = (open) => {
+        if (!lightbox) return;
+        lightbox.hidden = !open;
+        document.documentElement.style.overflow = open ? 'hidden' : '';
+        if (open) lightboxImage.src = main.src;
+    };
+
+    thumbs.forEach((thumb, i) => thumb.addEventListener('click', () => show(i)));
+    main.closest('button')?.addEventListener('click', () => setLightbox(true));
+    lightbox?.querySelector('[data-lightbox-close]')?.addEventListener('click', () => setLightbox(false));
+    lightbox?.querySelector('[data-lightbox-prev]')?.addEventListener('click', (e) => { e.stopPropagation(); show(index - 1); });
+    lightbox?.querySelector('[data-lightbox-next]')?.addEventListener('click', (e) => { e.stopPropagation(); show(index + 1); });
+    lightbox?.addEventListener('click', (e) => { if (e.target === lightbox) setLightbox(false); });
+    document.addEventListener('keydown', (event) => {
+        if (!lightbox || lightbox.hidden) return;
+        if (event.key === 'Escape') setLightbox(false);
+        if (event.key === 'ArrowLeft') show(index - 1);
+        if (event.key === 'ArrowRight') show(index + 1);
+    });
 });

@@ -1,5 +1,5 @@
-@props(['product', 'rank' => null, 'votedIds' => [], 'pinned' => false])
-<li class="list-row group" data-category="{{ $product->category?->slug }}" style="--inset: {{ $rank ? '7.25rem' : '5rem' }}">
+@props(['product', 'rank' => null, 'votedIds' => [], 'pinned' => false, 'hidden' => false])
+<li @if ($hidden) hidden data-more @endif class="list-row group" data-category="{{ $product->category?->slug }}" style="--inset: {{ $rank ? '7.25rem' : '5rem' }}">
     <div class="flex items-center gap-4 px-4 py-3.5 sm:px-5">
         @if ($rank)
             <span class="w-6 shrink-0 text-right text-[0.9375rem] font-semibold tabular-nums {{ $rank <= 3 ? 'text-ink' : 'text-ink-2' }}">{{ $rank }}</span>
@@ -20,6 +20,7 @@
                 <span class="meta mt-1 hidden sm:flex">
                     @if ($product->category)<span>{{ $product->category->name }}</span>@endif
                     <span>{{ $product->pricingLabel() }}</span>
+                    @if ($product->comments_count)<span class="inline-flex items-center gap-1"><x-icon name="message" :size="12" />{{ $product->comments_count }}</span>@endif
                     @if ($pinned || $product->isFeatured())<span class="font-medium text-ink">Featured</span>@endif
                 </span>
             </span>

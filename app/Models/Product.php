@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -52,6 +53,21 @@ class Product extends Model
         return $this->hasMany(Vote::class);
     }
 
+    public function bookmarks(): HasMany
+    {
+        return $this->hasMany(Bookmark::class);
+    }
+
+    public function launchReminders(): HasMany
+    {
+        return $this->hasMany(LaunchReminder::class);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
@@ -64,6 +80,12 @@ class Product extends Model
         return $query->where('status', 'approved')
             ->whereNotNull('launch_date')
             ->whereDate('launch_date', '<=', today());
+    }
+
+    /** Approved launches scheduled after today. */
+    public function scopeUpcoming(Builder $query): Builder
+    {
+        return $query->where('status', 'approved')->whereDate('launch_date', '>', today());
     }
 
     public function scopeLaunchedBetween(Builder $query, Carbon $from, Carbon $to): Builder
@@ -89,7 +111,7 @@ class Product extends Model
      * the other featured apps every 10 minutes in a fixed order, so over a day
      * every Pro launch gets the same share of views (random picks can't promise that).
      */
-    public static function featuredRotation(?int $count = null, ?Carbon $now = null): \Illuminate\Support\Collection
+    public static function featuredRotation(?int $count = null, ?Carbon $now = null): Collection
     {
         $count ??= config('rankedlaunch.featured_on_homepage', 3);
         $now ??= now();
